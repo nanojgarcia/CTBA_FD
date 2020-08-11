@@ -1,0 +1,82 @@
+---
+title: "Property Tax Exemption"
+author: "Fernando Garcia - Drazzel Feliu"
+date: "8/11/2020"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(ggmap)
+library(tidycensus)
+library(mapview)
+library(sf)
+library(leaflet)
+```
+
+Below, I pull the median property value for year 2018 by tract:  
+
+```{r, warning=FALSE, error=FALSE}
+census_data <- get_acs(
+  geography = "tract",
+  variables = c(
+    median_value = "B25077_001"
+  ),
+  state = "IL",
+  county = "Cook County",
+  year = 2018,
+  geometry = TRUE
+)
+```
+
+```{r, warning=FALSE, error=FALSE}
+census_data <- census_data %>%
+  select(GEOID, NAME, estimate, geometry)
+
+census_data <- census_data %>%
+  rename(value_18 = estimate)
+```
+
+
+Below, I pull the median property value for year 2013 by tract:  
+
+
+```{r, warning=FALSE, error=FALSE}
+census_data_13 <- get_acs(
+  geography = "tract",
+  variables = c(
+    median_value = "B25077_001"
+  ),
+  state = "IL",
+  county = "Cook County",
+  year = 2013,
+  geometry = TRUE
+)
+```
+
+```{r, warning=FALSE, error=FALSE}
+census_data_13 <- census_data_13 %>%
+  select(GEOID, NAME, estimate, geometry)
+
+census_data_13 <- census_data_13 %>%
+  rename(value_13 = estimate)
+```
+
+```{r, warning=FALSE, error=FALSE}
+st_geometry(census_data_13) <- NULL
+
+census <- census_data %>%
+  left_join(census_data_13, by = c("GEOID", "NAME"))
+```
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(increase_value = (value_18 / value_13 - 1) * 100)
+```
+
+```{r, warning=FALSE, error=FALSE}
+mapview(census, zcol = "increase_value")
+```
