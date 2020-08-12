@@ -104,9 +104,10 @@ cityboundary <- read_sf("geo_export_72cf3d72-fa82-4448-a382-c9dd6dcb4fd2.shp")
 
 cityboundary <- st_union(cityboundary)
 
-cityboundary <- st_transform(cityboundary,
-                             4326)
-
+cityboundary <- st_transform(
+  cityboundary,
+  4326
+)
 ```
 
 ```{r, warning=FALSE, error=FALSE}
@@ -115,36 +116,96 @@ class(census)
 
 class(cityboundary)
 
-cityboundary <- cityboundary
-
-census <- census
-
-chicago_only <- st_join(census, cityboundary)
-
+cityboundary <- st_transform(cityboundary, "+proj=longlat +datum=NAD83 +no_defs")
+census <- st_transform(census, "+proj=longlat +datum=NAD83 +no_defs")
 ```
 
+We do the intersection of both areas:
+
+```{r}
+census$inter <- as.numeric(st_intersects(census, cityboundary))
+
+census <- census %>% filter(inter == 1)
+```
+
+Filter the areas where the city of Chicago and the cencus tract intersect but not coincide completely:
 
 ```{r}
 
-#calabels <- sprintf(
-  #paste0("<strong>%g%%</strong> of single filers earning over $200K in Illinois reside in <strong>%s.</strong><br/>"),
-  #round(test$x_200_k_or_more_as_pct, 2),
-  #test$county
-#) %>%
-  #lapply(HTML)
+filter_list <- c(
+  "17031810000", "17031810200", "17031810301", "17031807600", "17031808002",
+  "17031808001", "17031807900", "17031807800", "17031808100", "17031808100",
+  "17031805402", "17031805502", "17031810400", "17031805702", "17031770700",
+  "17031770602", "17031770500", "17031770800", "17031811600", "17031811701",
+  "17031811500", "17031770902", "17031770901", "17031810501", "17031810502",
+  "17031810600", "17031811200", "17031811100", "17031810800", "17031810701",
+  "17031810702", "17031810900", "17031811900", "17031812200", "17031812100",
+  "17031812500", "17031812600", "17031813000", "17031813100", "17031813500",
+  "17031813400", "17031813301", "17031813302", "17031813801", "17031814200",
+  "17031820700", "17031820800", "17031820300", "17031820400", "17031820502",
+  "17031820901", "17031820902", "17031821102", "17031822101", "17031822000",
+  "17031821600", "17031821700", "17031821900", "17031822701", "17031822702",
+  "17031822802", "17031822801", "17031823200", "17031823303", "17031823304",
+  "17031823400", "17031823500", "17031821200", "17031821401", "17031821402",
+  "17031821500", "17031826500", "17031826401", "17031825801", "17031825700",
+  "17031805600"
+)
 
-#callaboptions <- labelOptions(
-  #style = list(
- #   "font-weight" = "normal",
-  #  padding = "3px 8px"
-  #),
-  #textsize = "15px",
-  #direction = "auto"
-#)
+census <- census %>%
+  filter(!GEOID %in% filter_list)
 ```
 
+Checking the limits:
+
+```{r, warning=FALSE, error=FALSE}
+
+leaflet() %>%
+  addProviderTiles(providers$OpenStreetMap) %>%
+  addPolygons(data = st_geometry(census))
+```
+
+Map #1
+
+```{r, warning=FALSE, error=FALSE}
+
+mapview(census, zcol = "increase_value")
+
+```
+
+Map #2
+
+```{r, warning=FALSE, error=FALSE}
+ggplot() +
+  geom_sf(census,
+    mapping = aes(
+      fill = increase_value,
+      color = increase_value
+    ),
+    inherit.aes = F,
+    alpha = .99
+  ) +
+  scale_fill_viridis() +
+  scale_color_viridis() +
+  theme_minimal() +
+  ggtitle("Percentage increase in property houses between 2018 and 2013", )
+```
 
 Colors:
+
+```{r}
+
+# calabels <- sprintf(
+# paste0("<strong>%g%%</strong> of single filers earning over $200K in Illinois reside in <strong>%s.</strong><br/>"),
+#  round(test$x_200_k_or_more_as_pct,2),
+# test$county) %>%
+# lapply(HTML)
+
+# callaboptions <- labelOptions(
+# style = list("font-weight" = "normal",
+#             padding = "3px 8px"),
+# textsize = "15px",
+# direction = "auto")
+```
 
 ```{r, warning=FALSE, error=FALSE}
 
@@ -154,7 +215,7 @@ color_200k <- colorNumeric(
 )
 ```
 
-Map:
+Map #3:
 
 
 ```{r}
@@ -162,11 +223,9 @@ Map:
 map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
-    data = st_geometry(chicago_only),
+    data = st_geometry(census),
     color = "black",
-    fillColor = color_200k(chicago_only$increase_value),
-    popup = calabels,
-    popupOptions = callaboptions,
+    fillColor = color_200k(census$increase_value),
     weight = 2.5,
     fillOpacity = .55,
     smoothFactor = .2
@@ -174,13 +233,10 @@ map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addLegend(
     title = "Percentage increase of housing values between 2018 and 2013",
     pal = color_200k,
-    values = test$increase_value,
+    values = census$increase_value,
     position = "topright"
   )
 saveWidget(map, "downstate_200k.html")
 
-webshot("downstate_200k.html",
-  file = "downstate_200k.png",
-  cliprect = "viewport"
-)
+map
 ```
