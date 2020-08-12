@@ -108,20 +108,31 @@ cityboundary <- st_transform(
 
 ```{r, warning=FALSE, error=FALSE}
 
-class(census)
+class(racedata)
+
+class(racedata_13)
 
 class(cityboundary)
 
 cityboundary <- st_transform(cityboundary, "+proj=longlat +datum=NAD83 +no_defs")
-census <- st_transform(census, "+proj=longlat +datum=NAD83 +no_defs")
+
+racedata <- st_transform(racedata, "+proj=longlat +datum=NAD83 +no_defs")
+
+racedata_13 <- st_transform(racedata_13, "+proj=longlat +datum=NAD83 +no_defs")
 ```
 
 We do the intersection of both areas:
 
 ```{r}
-census$inter <- as.numeric(st_intersects(census, cityboundary))
+racedata$inter <- as.numeric(st_intersects(racedata, cityboundary))
 
-census <- census %>% filter(inter == 1)
+racedata_13$inter <- as.numeric(st_intersects(racedata_13, cityboundary))
+
+racedata <- racedata %>% 
+  filter(inter == 1)
+
+racedata_13 <- racedata_13 %>% 
+  filter(inter == 1)
 ```
 
 Filter the areas where the city of Chicago and the cencus tract intersect but not coincide completely:
@@ -147,7 +158,10 @@ filter_list <- c(
   "17031805600"
 )
 
-census <- census %>%
+racedata <- racedata %>%
+  filter(!GEOID %in% filter_list)
+
+racedata_13 <- racedata_13 %>%
   filter(!GEOID %in% filter_list)
 ```
 
@@ -161,18 +175,6 @@ leaflet() %>%
 ```
 
 Map #1
-
-```{r, warning=FALSE, error=FALSE}
-
-mapview(census, zcol = "increase_value")
-
-```
-
-
-
-
-
-
 
 ```{r message=FALSE, warning=FALSE}
 

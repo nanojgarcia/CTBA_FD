@@ -25,74 +25,179 @@ library(ggrepel)
 library(ggmap)
 ```
 
-Below, I pull the median property value for year 2018 by tract:  
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- get_acs(
   geography = "tract",
   variables = c(
-    median_value = "B25077_001"
+    population_18 = "B01001_001",
+    income_18 = "B19013_001",
+    value_18 = "B25077_001"
   ),
   state = "IL",
   county = "Cook County",
   year = 2018,
-  geometry = TRUE
+  geometry = F
 )
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  select(GEOID, NAME, estimate, geometry)
+  select(GEOID, NAME, variable, estimate)
 
 census_data <- census_data %>%
-  rename(value_18 = estimate)
+  pivot_wider(names_from = variable, values_from = estimate)
+
 ```
 
+#Race data
 
-Below, I pull the median property value for year 2013 by tract:  
+```{r message=FALSE, warning=FALSE}
+codebook <- load_variables(2017,"acs5")
 
+racecodebook <- codebook %>% filter(str_detect(label,"race")) %>% filter(str_detect(label,"Population of one")) %>%
+  mutate(names="name", count=1:7, merge=paste(names,count, sep="")) %>% select(-c(names,count))
+
+```
+
+```{r message=FALSE, warning=FALSE}
+racedataindi <- get_acs(geography = "tract",
+        variables = unlist(racecodebook$name),
+        state = "IL",
+        county = "Cook County",
+        geometry = T,
+        year = 2018,
+        cb = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+racedata <- racedataindi %>% 
+  filter(variable!="C02003_002") %>% 
+  group_by(GEOID) %>% 
+  mutate(sum=sum(estimate)) %>%
+  mutate(percent=estimate/sum(estimate)*100)
+
+racedata <- merge(racedata,racecodebook[c(1,2)],by.x="variable",by.y="name") %>%
+  select(-variable) %>%
+  mutate(label=str_remove(label,"Estimate!!Total!!Population of one race!!")) %>% 
+  group_by(GEOID) %>% 
+  arrange(GEOID)
+
+racedata <- racedata %>%
+  select(-c(moe,estimate,sum)) %>%
+  mutate(percent=replace_na(percent,0)) %>%
+  spread(label,percent) %>% arrange(GEOID)
+
+```
+
+We will join both databases:
 
 ```{r, warning=FALSE, error=FALSE}
-census_data_13 <- get_acs(
+census_data_18 <- left_join(census_data, racedata, by=c ("GEOID", "NAME"))
+```
+
+Now, we will pull the dame data for year 2013:
+
+```{r, warning=FALSE, error=FALSE}
+census_data <- get_acs(
   geography = "tract",
   variables = c(
-    median_value = "B25077_001"
+    population_13 = "B01001_001",
+    income_13 = "B19013_001",
+    value_13 = "B25077_001"
   ),
   state = "IL",
   county = "Cook County",
   year = 2013,
-  geometry = TRUE
+  geometry = F
 )
 ```
 
 ```{r, warning=FALSE, error=FALSE}
+census_data <- census_data %>%
+  select(GEOID, NAME, variable, estimate)
+
+census_data <- census_data %>%
+  pivot_wider(names_from = variable, values_from = estimate)
+
+```
+
+#Race data 2013
+
+
+```{r message=FALSE, warning=FALSE}
+racedataindi <- get_acs(geography = "tract",
+        variables = unlist(racecodebook$name),
+        state = "IL",
+        county = "Cook County",
+        geometry = T,
+        year = 2013,
+        cb = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+racedata <- racedataindi %>% 
+  filter(variable!="C02003_002") %>% 
+  group_by(GEOID) %>% 
+  mutate(sum=sum(estimate)) %>%
+  mutate(percent=estimate/sum(estimate)*100)
+
+racedata <- merge(racedata,racecodebook[c(1,2)],by.x="variable",by.y="name") %>%
+  select(-variable) %>%
+  mutate(label=str_remove(label,"Estimate!!Total!!Population of one race!!")) %>% 
+  group_by(GEOID) %>% 
+  arrange(GEOID)
+
+racedata <- racedata %>%
+  select(-c(moe,estimate,sum)) %>%
+  mutate(percent=replace_na(percent,0)) %>%
+  spread(label,percent) %>% arrange(GEOID)
+
+```
+
+We will join both databases:
+
+```{r, warning=FALSE, error=FALSE}
+census_data_13 <- left_join(census_data, racedata, by=c ("GEOID", "NAME"))
+```
+
+```{r, warning=FALSE, error=FALSE}
 census_data_13 <- census_data_13 %>%
-  select(GEOID, NAME, estimate, geometry)
+  rename("White 13"= "White")
 
 census_data_13 <- census_data_13 %>%
-  rename(value_13 = estimate)
+  rename("Some other race 13"="Some other race")
+
+census_data_13 <- census_data_13 %>%
+  rename("Native Hawaiian and Other Pacific Islander  13" = 
+           "Native Hawaiian and Other Pacific Islander")
+
+census_data_13 <- census_data_13 %>%
+  rename("Black or African American  13" = "Black or African American")
+
+census_data_13 <- census_data_13 %>%
+  rename("Asian alone  13" = "Asian alone")
+
+census_data_13 <- census_data_13 %>%
+  rename("American Indian and Alaska Native  13" = "American Indian and Alaska Native")
+
 ```
+
+Then, we will join databases from 2018 and 2013
 
 ```{r, warning=FALSE, error=FALSE}
 st_geometry(census_data_13) <- NULL
 
-census <- census_data %>%
+census <- census_data_18 %>%
   left_join(census_data_13, by = c("GEOID", "NAME"))
 ```
+
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
   mutate(increase_value = (value_18 / value_13 - 1) * 100)
-```
-
-```{r, warning=FALSE, error=FALSE}
-mapview(census, zcol = "increase_value")
-```
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  arrange(desc(increase_value)) %>%
-  head(5)
 ```
 
 
@@ -163,6 +268,8 @@ leaflet() %>%
   addProviderTiles(providers$OpenStreetMap) %>%
   addPolygons(data = st_geometry(census))
 ```
+
+#Maps
 
 Map #1
 
@@ -239,4 +346,72 @@ map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 saveWidget(map, "downstate_200k.html")
 
 map
+```
+
+#Movers
+
+```{r, warning=FALSE, error=FALSE}
+movers <- get_acs(
+  geography = "tract",
+  variables = c(
+    median_value = "B07101_001"
+  ),
+  state = "IL",
+  county = "Cook County",
+  year = 2018,
+  geometry = TRUE
+)
+```
+
+```{r, warning=FALSE, error=FALSE}
+movers <- movers %>%
+  select(GEOID, NAME, estimate, geometry)
+
+movers <- movers %>%
+  rename(movers_18 = estimate)
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+movers <- st_transform(movers, "+proj=longlat +datum=NAD83 +no_defs")
+
+```
+
+```{r}
+movers$inter <- as.numeric(st_intersects(movers, cityboundary))
+
+movers <- movers %>% filter(inter == 1)
+```
+
+Filter the areas where the city of Chicago and the cencus tract intersect but not coincide completely:
+
+```{r}
+
+filter_list <- c(
+  "17031810000", "17031810200", "17031810301", "17031807600", "17031808002",
+  "17031808001", "17031807900", "17031807800", "17031808100", "17031808100",
+  "17031805402", "17031805502", "17031810400", "17031805702", "17031770700",
+  "17031770602", "17031770500", "17031770800", "17031811600", "17031811701",
+  "17031811500", "17031770902", "17031770901", "17031810501", "17031810502",
+  "17031810600", "17031811200", "17031811100", "17031810800", "17031810701",
+  "17031810702", "17031810900", "17031811900", "17031812200", "17031812100",
+  "17031812500", "17031812600", "17031813000", "17031813100", "17031813500",
+  "17031813400", "17031813301", "17031813302", "17031813801", "17031814200",
+  "17031820700", "17031820800", "17031820300", "17031820400", "17031820502",
+  "17031820901", "17031820902", "17031821102", "17031822101", "17031822000",
+  "17031821600", "17031821700", "17031821900", "17031822701", "17031822702",
+  "17031822802", "17031822801", "17031823200", "17031823303", "17031823304",
+  "17031823400", "17031823500", "17031821200", "17031821401", "17031821402",
+  "17031821500", "17031826500", "17031826401", "17031825801", "17031825700",
+  "17031805600"
+)
+
+movers <- movers %>%
+  filter(!GEOID %in% filter_list)
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+mapview(movers, zcol = "movers_18")
+
 ```
