@@ -188,16 +188,10 @@ census_data_13 <- census_data_13 %>%
 Then, we will join databases from 2018 and 2013
 
 ```{r, warning=FALSE, error=FALSE}
-st_geometry(census_data_13) <- NULL
+census_data_13$geometry <- NULL
 
 census <- census_data_18 %>%
   left_join(census_data_13, by = c("GEOID", "NAME"))
-```
-
-
-```{r, warning=FALSE, error=FALSE}
-census <- census %>%
-  mutate(increase_value = (value_18 / value_13 - 1) * 100)
 ```
 
 
@@ -267,6 +261,16 @@ Checking the limits:
 leaflet() %>%
   addProviderTiles(providers$OpenStreetMap) %>%
   addPolygons(data = st_geometry(census))
+```
+
+
+Changes between 2018 and 2013
+
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(increase_value = (value_18 / value_13 - 1) * 100)
+
 ```
 
 #Maps
