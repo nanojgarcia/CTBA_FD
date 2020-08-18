@@ -32,7 +32,10 @@ census_data <- get_acs(
   variables = c(
     population_18 = "B01001_001",
     income_18 = "B19013_001",
-    value_18 = "B25077_001"
+    agg_income_18 = "B19313_001",
+    avg_household_size_18 = "B25010_001",
+    value_18 = "B25077_001",
+    education_18 = "B15003_022"
   ),
   state = "IL",
   county = "Cook County",
@@ -51,10 +54,39 @@ census_data <- census_data %>%
 
 ```
 
+Checking summary statistics:
+
+```{r, warning=FALSE, error=FALSE}
+census_data %>%
+  mutate(income_pc_18=agg_income_18/population_18) %>%
+  summarise(mean_income_pc_18=mean(income_pc_18,na.rm=T))
+
+census_data <- census_data %>%
+  mutate(income_pc_18=agg_income_18/population_18) #create income per capita
+
+census_data %>%
+  summarise(mean_avg_household_size_18 = mean(avg_household_size_18,na.rm=T))
+
+census_data %>%
+  mutate(income_household_18=(agg_income_18/population_18) * 
+           avg_household_size_18) %>%
+  summarise(median_income_household_18=median(income_household_18,na.rm=T))
+
+census_data <- census_data %>%
+  mutate(household_income_18=(agg_income_18/population_18) * 
+           avg_household_size_18) #create household income
+
+
+```
+
+Mean income per capita for 2018 is $34,905. Median household income is 76,307 with an average household size of 2.6. Correct if we look at https://www.census.gov/quickfacts/fact/table/chicagocityillinois/LND110210.
+
+
+
 #Race data
 
 ```{r message=FALSE, warning=FALSE}
-codebook <- load_variables(2017,"acs5")
+codebook <- load_variables(2018,"acs5")
 
 racecodebook <- codebook %>% 
   filter(str_detect(label,"race")) %>% 
@@ -113,6 +145,8 @@ census_data <- get_acs(
   variables = c(
     population_13 = "B01001_001",
     income_13 = "B19013_001",
+    agg_income_13 = "B19313_001",
+    avg_household_size_13 = "B25010_001",
     value_13 = "B25077_001"
   ),
   state = "IL",
@@ -130,6 +164,30 @@ census_data <- census_data %>%
 
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_data %>%
+  mutate(income_pc_13=agg_income_13/population_13) %>%
+  summarise(mean_income_pc_13=mean(income_pc_13,na.rm=T))
+
+census_data <- census_data %>%
+  mutate(income_pc_13=agg_income_13/population_13) #create income per capita
+
+census_data %>%
+  summarise(mean_avg_household_size_13=mean(avg_household_size_13,na.rm=T))
+
+census_data %>%
+  mutate(income_household_13=(agg_income_13/population_13) * 
+           avg_household_size_13) %>%
+  summarise(median_income_household_13=median(income_household_13,na.rm=T))
+
+census_data <- census_data %>%
+  mutate(household_income_13=(agg_income_13/population_13) * 
+           avg_household_size_13) #create household income
+
 
 ```
 
@@ -237,6 +295,9 @@ census$inter <- as.numeric(st_intersects(census, cityboundary))
 
 census <- census %>% 
   filter(inter == 1)
+
+census <- census %>%
+  select(-c(inter))
 ```
 
 Filter the areas where the city of Chicago and the cencus tract intersect but not coincide completely:
@@ -270,9 +331,9 @@ Checking the limits:
 
 ```{r, warning=FALSE, error=FALSE}
 
-leaflet() %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
-  addPolygons(data = st_geometry(census))
+#leaflet() %>%
+#  addProviderTiles(providers$OpenStreetMap) %>%
+#  addPolygons(data = st_geometry(census))
 
 ```
 
@@ -292,6 +353,49 @@ census <- census %>%
 
 
 ```
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(gentri_1 = case_when(
+    increase_value > 100 & value_18 > 200000 ~ 1,
+    increase_value > 50 & value_18 > 220000 ~1,
+    increase_value <= 100 & value_18 <= 200000 ~ 0,
+    increase_value <= 50 & value_18 <= 220000 ~ 0,
+    increase_value <= 50 ~ 0,
+    value_18 <= 200000 ~ 0
+    )
+  )
+```
+
+Define gentrification:
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(gentri_1 = case_when(
+    increase_value > 100 & value_18 > 200000 ~ 1,
+    increase_value > 50 & value_18 > 220000 ~1,
+    increase_value <= 100 & value_18 <= 200000 ~ 0,
+    increase_value <= 50 & value_18 <= 220000 ~ 0,
+    increase_value <= 50 ~ 0,
+    value_18 <= 200000 ~ 0
+    )
+  )
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(gentri_2 = case_when(
+    increase_value > 100 & household_income_18 <= 61000 ~ 1,
+    increase_value > 50 & household_income_18 <= 46000 ~1,
+    increase_value <= 100 & household_income_18 > 61000 ~ 0,
+    increase_value <= 100 & household_income_18 > 46000 ~ 0,
+    increase_value <= 50 ~ 0,
+    household_income_18 > 61000 ~ 0
+    )
+  )
+```
+
 
 #Different Maps with increase in property values as example
 
