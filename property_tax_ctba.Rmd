@@ -52,6 +52,9 @@ census_data <- census_data %>%
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
 
+census_data <- census_data %>%
+  mutate(bachelor_18=education_18/population_18)
+
 ```
 
 Checking summary statistics:
@@ -75,7 +78,6 @@ census_data %>%
 census_data <- census_data %>%
   mutate(household_income_18=(agg_income_18/population_18) * 
            avg_household_size_18) #create household income
-
 
 ```
 
@@ -147,6 +149,7 @@ census_data <- get_acs(
     income_13 = "B19013_001",
     agg_income_13 = "B19313_001",
     avg_household_size_13 = "B25010_001",
+    education_13 = "B15003_022",
     value_13 = "B25077_001"
   ),
   state = "IL",
@@ -164,6 +167,9 @@ census_data <- census_data %>%
 
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
+
+census_data <- census_data %>%
+  mutate(bachelor_13=education_13/population_13)
 
 ```
 
@@ -279,6 +285,14 @@ cityboundary <- st_transform(
   cityboundary,
   4326
 )
+
+community <- read_sf("geo_export_72cf3d72-fa82-4448-a382-c9dd6dcb4fd2.shp")
+
+community <- st_transform(
+  community,
+  4326
+)
+
 ```
 
 ```{r, warning=FALSE, error=FALSE}
@@ -327,16 +341,6 @@ census <- census %>%
   filter(!GEOID %in% filter_list)
 ```
 
-Checking the limits:
-
-```{r, warning=FALSE, error=FALSE}
-
-#leaflet() %>%
-#  addProviderTiles(providers$OpenStreetMap) %>%
-#  addPolygons(data = st_geometry(census))
-
-```
-
 
 Changes between 2018 and 2013
 
@@ -351,51 +355,13 @@ census <- census %>%
 census <- census %>%
   mutate(increase_pop = (population_18 / population_13 - 1) * 100)
 
-
-```
-
-```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(gentri_1 = case_when(
-    increase_value > 100 & value_18 > 200000 ~ 1,
-    increase_value > 50 & value_18 > 220000 ~1,
-    increase_value <= 100 & value_18 <= 200000 ~ 0,
-    increase_value <= 50 & value_18 <= 220000 ~ 0,
-    increase_value <= 50 ~ 0,
-    value_18 <= 200000 ~ 0
-    )
-  )
-```
-
-Define gentrification:
-
-```{r, warning=FALSE, error=FALSE}
-census <- census %>%
-  mutate(gentri_1 = case_when(
-    increase_value > 100 & value_18 > 200000 ~ 1,
-    increase_value > 50 & value_18 > 220000 ~1,
-    increase_value <= 100 & value_18 <= 200000 ~ 0,
-    increase_value <= 50 & value_18 <= 220000 ~ 0,
-    increase_value <= 50 ~ 0,
-    value_18 <= 200000 ~ 0
-    )
-  )
-```
-
-```{r, warning=FALSE, error=FALSE}
+  mutate(increase_education = (education_18 / education_13 - 1) * 100)
 
 census <- census %>%
-  mutate(gentri_2 = case_when(
-    increase_value > 100 & household_income_18 <= 61000 ~ 1,
-    increase_value > 50 & household_income_18 <= 46000 ~1,
-    increase_value <= 100 & household_income_18 > 61000 ~ 0,
-    increase_value <= 100 & household_income_18 > 46000 ~ 0,
-    increase_value <= 50 ~ 0,
-    household_income_18 > 61000 ~ 0
-    )
-  )
-```
+  mutate(increase_bachelor = (bachelor_18 / bachelor_13 - 1) * 100)
 
+```
 
 #Different Maps with increase in property values as example
 
@@ -446,7 +412,7 @@ Colors:
 
 color_200k <- colorNumeric(
   palette = c("white", "blue"),
-  domain = chicago_only$increase_value
+  domain = census$increase_value
 )
 ```
 
@@ -455,7 +421,7 @@ Map #3:
 
 ```{r}
 
-map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
     data = st_geometry(census),
@@ -471,7 +437,146 @@ map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     values = census$increase_value,
     position = "topright"
   )
+
+```
+
+
+#Gentrification:
+
+We will look into the distribution of the home value increase:
+
+```{r}
+
+census %>%
+  summarise(median_increase_value=median(increase_value, na.rm=T))
+
+census %>%
+  ggplot(aes(increase_value)) +
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept = 4.334484, color="blue")
+
+``` 
+
+```{r}
+
+ggplot(census) +
+  geom_histogram(aes(x = increase_value, y = ..density..),
+    binwidth = 1,
+    colour = "black", fill = "white"
+  ) +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+We will zoom in to look at the outliers:
+
+```{r}
+ggplot(census) +
+  geom_histogram(aes(x = increase_value, y = ..density..),
+    binwidth = 1,
+    colour = "black", fill = "white"
+  ) +
+  xlim(c(25, 200)) +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+The cumulative distribution looks like this:
+
+```{r, warning=FALSE, error=FALSE}
+plot(ecdf(census$increase_value), 
+     xlab="Home value price increase ($)",
+     ylab="Cumulative Distribution",
+     main="Home value price increase distributions from 2013-2018")
+abline(h=0.95, col="blue")
+```
+
+The last 5% of the distribution gets a 50% or more of an increase in home values. We can use this to define gentrification.
+
+First definition of gentrification:
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(gentri_1 = case_when(
+    increase_value > 50 & value_18 > 200000 ~ 1,
+    increase_value > 25 & value_18 > 220000 ~1,
+    increase_value <= 50 & value_18 <= 200000 ~ 0,
+    increase_value <= 25 & value_18 <= 220000 ~ 0,
+    increase_value <= 25 ~ 0,
+    value_18 <= 200000 ~ 0
+    )
+  )
+```
+
+These are the tracts that would be gentrified according to definition 1:
+
+
+```{r}
+
+map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(census %>% filter(census$gentri_1==1)),
+    color = "black",
+    fillColor = color_200k(census$increase_value),
+    weight = 2.5,
+    fillOpacity = .55,
+    smoothFactor = .2
+  ) %>%
+  addPolygons(
+    data = st_geometry(community)) %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = census$increase_value,
+    position = "topright"
+  )
 saveWidget(map, "downstate_200k.html")
 
 map
 ```
+
+
+Second definition of gentrification:
+
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(gentri_2 = case_when(
+    increase_value > 50 & household_income_18 <= 61000 ~ 1,
+    increase_value > 25 & household_income_18 <= 46000 ~1,
+    increase_value <= 50 & household_income_18 > 61000 ~ 0,
+    increase_value <= 25 & household_income_18 > 46000 ~ 0,
+    increase_value <= 25 ~ 0,
+    household_income_18 > 61000 ~ 0
+    )
+  )
+```
+
+These are the tracts that would be gentrified according to definition 1:
+
+```{r}
+
+map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(census %>% filter(census$gentri_2==1)),
+    color = "black",
+    fillColor = color_200k(census$increase_value),
+    weight = 2.5,
+    fillOpacity = .55,
+    smoothFactor = .2
+  ) %>%
+  addPolygons(
+    data = st_geometry(community)) %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = census$increase_value,
+    position = "topright"
+  )
+saveWidget(map, "downstate_200k.html")
+
+map
+```
+
