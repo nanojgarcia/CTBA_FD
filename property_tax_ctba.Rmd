@@ -197,6 +197,8 @@ census_data <- census_data %>%
 
 ```
 
+Median household income is \$ 65,390 and per capita income mean is \$29,682 in 2013.
+
 #Race data 2013
 
 
@@ -443,19 +445,25 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 
 #Gentrification:
 
-We will look into the distribution of the home value increase:
+Distribution of home values in 2018:
 
 ```{r}
 
 census %>%
-  summarise(median_increase_value=median(increase_value, na.rm=T))
+  summarise(median_value_18=median(value_18, na.rm=T))
 
-census %>%
-  ggplot(aes(increase_value)) +
-  geom_histogram(bins = 50) +
-  geom_vline(xintercept = 4.334484, color="blue")
+ggplot(census) +
+  geom_histogram(aes(x = value_18, y = ..density..),
+    binwidth = 10000,
+    colour = "black", fill = "white"
+  )  +
+  geom_vline(xintercept = 226800, color="blue") +
+  ggtitle("Histogram price increase in home values")
 
 ``` 
+
+We will look into the distribution of the home value increase:
+
 
 ```{r}
 
@@ -464,6 +472,7 @@ ggplot(census) +
     binwidth = 1,
     colour = "black", fill = "white"
   ) +
+  geom_vline(xintercept = 4.334484, color="blue") +
   ggtitle("Histogram price increase in home values")
 
 ``` 
@@ -500,16 +509,25 @@ census <- census %>%
   mutate(gentri_1 = case_when(
     increase_value > 50 & value_18 > 200000 ~ 1,
     increase_value > 25 & value_18 > 220000 ~1,
-    increase_value <= 50 & value_18 <= 200000 ~ 0,
-    increase_value <= 25 & value_18 <= 220000 ~ 0,
+    increase_value <= 50 & (value_18 > 200000 & value_18 < 220000) ~ 0,
+    (increase_value > 25 & increase_value <= 50) & value_18 <= 220000 ~ 0,
     increase_value <= 25 ~ 0,
     value_18 <= 200000 ~ 0
     )
   )
 ```
 
-These are the tracts that would be gentrified according to definition 1:
+```{r, warning=FALSE, error=FALSE}
 
+census %>%
+  filter(gentri_1==1) %>%
+  count()
+
+```
+
+This measure of gentrification reaches 84 tracts.
+
+These are the tracts that would be gentrified according to definition 1:
 
 ```{r}
 
@@ -543,17 +561,27 @@ Second definition of gentrification:
 
 census <- census %>%
   mutate(gentri_2 = case_when(
-    increase_value > 50 & household_income_18 <= 61000 ~ 1,
-    increase_value > 25 & household_income_18 <= 46000 ~1,
-    increase_value <= 50 & household_income_18 > 61000 ~ 0,
-    increase_value <= 25 & household_income_18 > 46000 ~ 0,
+    increase_value > 50 & household_income_13 <= 52000 ~ 1,
+    increase_value > 25 & household_income_13 <= 40000 ~1,
+    (increase_value > 25 & increase_value <= 50) & 
+      (household_income_13 > 40000 & household_income_13 < 52000) ~ 0,
     increase_value <= 25 ~ 0,
-    household_income_18 > 61000 ~ 0
+    household_income_13 > 52000 ~ 0
     )
   )
 ```
 
-These are the tracts that would be gentrified according to definition 1:
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  filter(gentri_2==1) %>%
+  count()
+
+```
+
+This measure of gentrification reaches 27 tracts.
+
+These are the tracts that would be gentrified according to definition 2:
 
 ```{r}
 
