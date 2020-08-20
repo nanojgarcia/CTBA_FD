@@ -26,6 +26,7 @@ library(ggmap)
 ```
 
 
+
 ```{r, warning=FALSE, error=FALSE}
 census_data <- get_acs(
   geography = "tract",
@@ -35,7 +36,9 @@ census_data <- get_acs(
     agg_income_18 = "B19313_001",
     avg_household_size_18 = "B25010_001",
     value_18 = "B25077_001",
-    education_18 = "B15003_022"
+    education_18 = "B15003_022",
+    median_rent_18 = "B25064_001",
+    median_rent_income_18 = "B25071_001"
   ),
   state = "IL",
   county = "Cook County",
@@ -150,7 +153,9 @@ census_data <- get_acs(
     agg_income_13 = "B19313_001",
     avg_household_size_13 = "B25010_001",
     education_13 = "B15003_022",
-    value_13 = "B25077_001"
+    value_13 = "B25077_001",
+    median_rent_13 = "B25064_001",
+    median_rent_income_13 = "B25071_001"
   ),
   state = "IL",
   county = "Cook County",
@@ -467,13 +472,16 @@ We will look into the distribution of the home value increase:
 
 ```{r}
 
+census %>%
+  summarise(median_value_18=median(value_18, na.rm=T))
+
 ggplot(census) +
   geom_histogram(aes(x = increase_value, y = ..density..),
     binwidth = 1,
     colour = "black", fill = "white"
   ) +
   geom_vline(xintercept = 4.334484, color="blue") +
-  ggtitle("Histogram price increase in home values")
+  ggtitle("Histogram price icnrease home values")
 
 ``` 
 
@@ -493,7 +501,10 @@ ggplot(census) +
 The cumulative distribution looks like this:
 
 ```{r, warning=FALSE, error=FALSE}
-plot(ecdf(census$increase_value), 
+census_rest <- census %>%
+  filter(increase_value > 0)
+
+plot(ecdf(census_rest$increase_value), 
      xlab="Home value price increase ($)",
      ylab="Cumulative Distribution",
      main="Home value price increase distributions from 2013-2018")
@@ -608,3 +619,34 @@ saveWidget(map, "downstate_200k.html")
 map
 ```
 
+Summary statistics for gentrified areas:
+
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  filter(gentri_2==1) %>%
+  summarise(mean_increase_edu = median(increase_education, na.rm = T))
+
+census %>%
+  filter(gentri_2==0) %>%
+  summarise(mean_increase_edu = median(increase_education, na.rm = T))
+
+census_gen %>%
+  filter(gentri_2==1) %>%
+  summarise(mean_increase_bc = median(increase_bachelor, na.rm = T))
+
+census %>%
+  filter(gentri_1==0) %>%
+  summarise(mean_increase_bc = median(increase_bachelor, na.rm = T))
+
+census %>%
+  filter(gentri_2==1) %>%
+  summarise(mean_increase_income = mean(increase_income, na.rm = T))
+
+census %>%
+  filter(gentri_2==0) %>%
+  summarise(mean_increase_income = mean(increase_income, na.rm = T))
+
+
+```
