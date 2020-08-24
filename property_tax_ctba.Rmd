@@ -38,7 +38,10 @@ census_data <- get_acs(
     agg_income_18 = "B19313_001",
     avg_household_size_18 = "B25010_001",
     value_18 = "B25077_001",
-    education_18 = "B15003_022",
+    bachelor_18 = "B15003_022",
+    master_18 = "B15003_023",
+    prof_18 = "B15003_024",
+    phd_18 = "B15003_025",
     median_rent_18 = "B25064_001",
     median_rent_income_18 = "B25071_001"
   ),
@@ -57,8 +60,14 @@ census_data <- census_data %>%
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
 
+```
+
+```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  mutate(bachelor_18=education_18/population_18)
+  mutate(bc_18 = bachelor_18 + master_18 +prof_18 +phd_18 )
+
+census_data <- census_data %>%
+  select(-c(bachelor_18, master_18, prof_18, phd_18))
 
 ```
 
@@ -154,7 +163,10 @@ census_data <- get_acs(
     income_13 = "B19013_001",
     agg_income_13 = "B19313_001",
     avg_household_size_13 = "B25010_001",
-    education_13 = "B15003_022",
+    bachelor_13 = "B15003_022",
+    master_13 = "B15003_023",
+    prof_13 = "B15003_024",
+    phd_13 = "B15003_025",
     value_13 = "B25077_001",
     median_rent_13 = "B25064_001",
     median_rent_income_13 = "B25071_001"
@@ -175,8 +187,14 @@ census_data <- census_data %>%
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
 
+```
+
+```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  mutate(bachelor_13=education_13/population_13)
+  mutate(bc_13 = bachelor_13 + master_13 +prof_13 +phd_13 )
+
+census_data <- census_data %>%
+  select(-c(bachelor_13, master_13, prof_13, phd_13))
 
 ```
 
@@ -351,6 +369,36 @@ census <- census %>%
 ```
 
 
+What limit should we impose on population?
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  summarise(median_pop_18 = median(population_18, na.rm = T))
+
+ggplot(census) +
+  geom_histogram(aes(x = population_18, y = ..density..),
+                 binwidth = 50,
+    colour = "black", fill = "white"
+  )  +
+  geom_vline(xintercept = 3069.5, color="blue") +
+  ggtitle("Histogram of Population by tracts")
+
+
+```
+
+```{r}
+ggplot(census) +
+  geom_histogram(aes(x = population_18, y = ..density..),
+    binwidth = 50,
+    colour = "black", fill = "white"
+  ) +
+  xlim(c(0, 3500)) +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+
 Changes between 2018 and 2013
 
 ```{r, warning=FALSE, error=FALSE}
@@ -363,12 +411,6 @@ census <- census %>%
 
 census <- census %>%
   mutate(increase_pop = (population_18 / population_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_education = (education_18 / education_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_bachelor = (bachelor_18 / bachelor_13 - 1) * 100)
 
 ```
 
@@ -453,7 +495,7 @@ tract_labels <- sprintf(
 
 color_200k <- colorNumeric(
   palette = c("white", "blue"),
-  domain = census$increase_income
+  domain = census$increase_value
 )
 ```
 
@@ -501,7 +543,7 @@ ggplot(census) +
 
 ``` 
 
-We will look into the distribution of the home value increase:
+Distribution of home value increase:
 
 
 ```{r}
@@ -547,7 +589,7 @@ abline(h=0.95, col="blue")
 
 The last 5% of the distribution gets a 50% or more of an increase in home values. We can use this to define gentrification.
 
-First definition of gentrification:
+#First definition of gentrification:
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
@@ -573,6 +615,7 @@ census %>%
 This measure of gentrification reaches 84 tracts.
 
 These are the tracts that would be gentrified according to definition 1:
+
 
 ```{r}
 
@@ -610,7 +653,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 ```
 
 
-Second definition of gentrification:
+#Second definition of gentrification:
 
 ```{r, warning=FALSE, error=FALSE}
 
@@ -661,6 +704,110 @@ map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 saveWidget(map, "downstate_200k.html")
 
 map
+```
+
+
+#Gentrification definition according to Brummet, Reed, 2019. 
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(gentri_3 = (bc_18  - bc_13)/ population_13)
+
+```
+
+```{r}
+
+census %>%
+  summarise(median_gentri_3=median(gentri_3, na.rm=T))
+
+ggplot(census) +
+  geom_histogram(aes(x = gentri_3, y = ..density..),
+    colour = "black", fill = "white"
+  )  +
+  geom_vline(xintercept = 0.02742509, color="blue") +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+What is the 90th percentile of the gentrification's indicator:
+
+```{r, warning=FALSE, error=FALSE}
+gentrification = census$gentri_3
+
+quantile(gentrification, c(.90), na.rm = T) 
+```
+
+We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  summarise(median_income_13=median(household_income_13, na.rm = T))
+
+census <- census %>%
+  mutate(one_gentri_3 = case_when(
+    gentri_3 >= 0.1143626 & household_income_13 < 57272.42 ~ 1,
+    household_income_13 > 57272.42 ~ 0,
+    gentri_3 < 0.1143626 ~ 0
+    )
+  )
+```
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  filter(one_gentri_3==1) %>%
+  count()
+```
+
+This measure of gentrification reaches 26 tracts.
+
+These are the tracts that would be gentrified according to definition 3:
+
+```{r}
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(census %>% filter(census$one_gentri_3==1)),
+    color = "black",
+    fillColor = color_200k(census$gentri_3),
+    weight = 2.5,
+    fillOpacity = .3,
+    smoothFactor = .2,
+    popup = tract_labels,
+    popupOptions = tract_l_options,
+    highlightOptions = tract_h_lights,
+    group = "Gentrification By Education"
+  ) %>%
+  addPolygons(
+    data = st_geometry(community),
+    popup = neigh_labels,
+    popupOptions = neigh_l_options,
+    highlightOptions = neigh_h_lights,
+    group = "Community Areas") %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = census$gentri_3,
+    position = "topright"
+  ) %>% 
+  addLayersControl(
+    overlayGroups = c("Gentrification By Education", "Community Areas"),
+    position = "bottomright")
+
+```
+
+
+What are the correlations between the different definitions of gentrificaion?
+
+```{r, warning=FALSE, error=FALSE}
+
+cor(census$gentri_1, census$gentri_2, use = "complete.obs")
+
+cor(census$gentri_2, census$one_gentri_3, use = "complete.obs")
+
+cor(census$gentri_1, census$one_gentri_3, use = "complete.obs")
+
 ```
 
 Summary statistics for gentrified areas:
