@@ -583,7 +583,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     color = "black",
     fillColor = color_200k(census$increase_income),
     weight = 2.5,
-    fillOpacity = .55,
+    fillOpacity = .3,
     smoothFactor = .2,
     popup = tract_labels,
     popupOptions = tract_l_options,
@@ -605,9 +605,8 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addLayersControl(
     overlayGroups = c("Gentrification By Education", "Community Areas"),
     position = "bottomright")
-saveWidget(map, "downstate_200k.html")
 
-map
+
 ```
 
 
