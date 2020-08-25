@@ -175,12 +175,12 @@ This measure of gentrification reaches 75 tracts.
 
 census <- census %>%
   mutate(gentri_2 = case_when(
-    increase_value > 50 & household_income_13 <= 52000 ~ 1,
+    increase_value > 50 & household_income_13 <= 57272.42 ~ 1,
     increase_value > 25 & household_income_13 <= 40000 ~1,
     (increase_value > 25 & increase_value <= 50) & 
-      (household_income_13 > 40000 & household_income_13 < 52000) ~ 0,
+      (household_income_13 > 40000 & household_income_13 < 57272.42) ~ 0,
     increase_value <= 25 ~ 0,
-    household_income_13 > 52000 ~ 0
+    household_income_13 > 57272.42 ~ 0
     )
   )
 
@@ -254,7 +254,7 @@ How many tracts coincide between definition 2 and 3?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_1*gentri_2) %>%
+  mutate(common_gent = gentri_2*one_gentri_3) %>%
   filter(common_gent==1) %>%
   count()
 ```

@@ -414,7 +414,7 @@ Looking at the percentiles we can see that the distribution accumulates more obs
 
 census %>%
   filter(population_18 < 773) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
+  summarise(mean_income_pc= mean(income_pc_18, na.rm=T))
 
 ```
 
@@ -422,7 +422,7 @@ census %>%
 
 census %>%
   filter(population_18 < 1129.75) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
+  summarise(mean_income_pc= mean(income_pc_18, na.rm=T))
 
 ```
 
@@ -450,8 +450,35 @@ census %>%
 
 ```
 
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
+
+```
+
 The mean per capita income stabilize around the 10th percentile of the population in 2018.
 
+Is there a correlation between census tract's size and income?
+
+```{r, warning=FALSE, error=FALSE}
+
+ggplot(data = census) + 
+  geom_point(mapping = aes(x = income_18, y = population_18))+ 
+  geom_smooth(mapping = aes(x = income_18, y = population_18), method=lm)
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  filter(population_18 > 1425.50) %>%
+  ggplot() + 
+  geom_point(mapping = aes(x = income_18, y = population_18))+ 
+  geom_smooth(mapping = aes(x = income_18, y = population_18), method=lm)
+  
+
+```
 
 We will restrict tracts with a population of 1426 or more. 
 
