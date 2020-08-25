@@ -27,23 +27,23 @@ library(ggmap)
 rm(list = ls())
 ```
 
-We pull data from the ACS using tidycensus:
+
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- get_acs(
   geography = "tract",
   variables = c(
     population_18 = "B01001_001",
-    income_18 = "B19013_001",               #median household income 
+    income_18 = "B19013_001",
     agg_income_18 = "B19313_001",
     avg_household_size_18 = "B25010_001",
-    value_18 = "B25077_001",                #median home values
-    bachelor_18 = "B15003_022",             #population with a bachelor's degree
-    master_18 = "B15003_023",               #population with a master's degree
-    prof_18 = "B15003_024",                 #population with a professional's degree
-    phd_18 = "B15003_025",                  #population with a phd
+    value_18 = "B25077_001",
+    bachelor_18 = "B15003_022",
+    master_18 = "B15003_023",
+    prof_18 = "B15003_024",
+    phd_18 = "B15003_025",
     median_rent_18 = "B25064_001",
-    median_rent_income_18 = "B25071_001"    #median rent over income
+    median_rent_income_18 = "B25071_001"
   ),
   state = "IL",
   county = "Cook County",
@@ -62,8 +62,6 @@ census_data <- census_data %>%
 
 ```
 
-We create the variable people with bachelor degree or more:
-
 ```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
   mutate(bc_18 = bachelor_18 + master_18 +prof_18 +phd_18 )
@@ -73,19 +71,33 @@ census_data <- census_data %>%
 
 ```
 
-We create income per capita and household income for year 2018:
+Checking summary statistics:
 
 ```{r, warning=FALSE, error=FALSE}
+census_data %>%
+  mutate(income_pc_18=agg_income_18/population_18) %>%
+  summarise(mean_income_pc_18=mean(income_pc_18,na.rm=T))
 
 census_data <- census_data %>%
   mutate(income_pc_18=agg_income_18/population_18) #create income per capita
 
+census_data %>%
+  summarise(mean_avg_household_size_18 = mean(avg_household_size_18,na.rm=T))
+
+census_data %>%
+  mutate(income_household_18=(agg_income_18/population_18) * 
+           avg_household_size_18) %>%
+  summarise(median_income_household_18=median(income_household_18,na.rm=T))
 
 census_data <- census_data %>%
   mutate(household_income_18=(agg_income_18/population_18) * 
-           avg_household_size_18)     #create household income
+           avg_household_size_18) #create household income
 
 ```
+
+Mean income per capita for 2018 is $34,905. Median household income is 76,307 with an average household size of 2.6. Correct if we look at https://www.census.gov/quickfacts/fact/table/chicagocityillinois/LND110210.
+
+
 
 #Race data
 
@@ -130,7 +142,7 @@ racedata <- racedata %>%
 
 ```
 
-We will join both databases for 2018:
+We will join both databases:
 
 ```{r, warning=FALSE, error=FALSE}
 
@@ -141,7 +153,7 @@ census_data_18 <- left_join(census_data, racedata, by = c("NAME", "GEOID"))
 
 ```
 
-Now, we will pull the same data for year 2013:
+Now, we will pull the dame data for year 2013:
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- get_acs(
@@ -179,7 +191,7 @@ census_data <- census_data %>%
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  mutate(bc_13 = bachelor_13 + master_13 + prof_13 +phd_13 )
+  mutate(bc_13 = bachelor_13 + master_13 +prof_13 +phd_13 )
 
 census_data <- census_data %>%
   select(-c(bachelor_13, master_13, prof_13, phd_13))
@@ -188,16 +200,29 @@ census_data <- census_data %>%
 
 ```{r, warning=FALSE, error=FALSE}
 
+census_data %>%
+  mutate(income_pc_13=agg_income_13/population_13) %>%
+  summarise(mean_income_pc_13=mean(income_pc_13,na.rm=T))
+
 census_data <- census_data %>%
   mutate(income_pc_13=agg_income_13/population_13) #create income per capita
 
+census_data %>%
+  summarise(mean_avg_household_size_13=mean(avg_household_size_13,na.rm=T))
+
+census_data %>%
+  mutate(income_household_13=(agg_income_13/population_13) * 
+           avg_household_size_13) %>%
+  summarise(median_income_household_13=median(income_household_13,na.rm=T))
 
 census_data <- census_data %>%
   mutate(household_income_13=(agg_income_13/population_13) * 
            avg_household_size_13) #create household income
 
+
 ```
 
+Median household income is \$ 65,390 and per capita income mean is \$29,682 in 2013.
 
 #Race data 2013
 
@@ -341,125 +366,6 @@ filter_list <- c(
 
 census <- census %>%
   filter(!GEOID %in% filter_list)
-```
-
-We will look into NAs: 
-
-```{r}
-sapply(census, function(x) sum(is.na(x)))
-```
-
-Most of the variables have 3 NAs. These NAs are from O'Hare airport, Midway airport, and Taylor Park (Census Tract 3817) with no population.
-
-Outcome changes between 2018 and 2013:
-
-```{r, warning=FALSE, error=FALSE}
-
-census <- census %>%
-  mutate(increase_value = (value_18 / value_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_income = (income_18 / income_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_income_pc = (income_pc_18 / income_pc_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_pop = (population_18 / population_13 - 1) * 100)
-
-census <- census %>%
-  mutate(increase_rent = (median_rent_18/median_rent_13-1)*100)
-
-```
-
-What limit should we impose on population?
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  summarise(median_pop_18 = median(population_18, na.rm = T))
-
-ggplot(census) +
-  geom_histogram(aes(x = population_18, y = ..density..),
-                 binwidth = 100,
-    colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 3069.5, color="blue") +
-  ggtitle("Histogram of Population by tracts")
-
-
-```
-
-```{r}
-ggplot(census) +
-  geom_histogram(aes(x = population_18, y = ..density..),
-    binwidth = 50,
-    colour = "black", fill = "white"
-  ) +
-  xlim(c(0, 3500)) +
-  ggtitle("Histogram price increase in home values")
-
-``` 
-
-
-```{r, warning=FALSE, error=FALSE}
-population = census$population_18
-
-quantile(population, c(.01, .05, .10, .15, .20), na.rm = T) 
-```
-
-Looking at the percentiles we can see that the distribution accumulates more observations at the 10th percentile. We can check how the mean per capita income stabilize after we restrict the sample to these thresholds: 
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  filter(population_18 < 773) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
-```
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  filter(population_18 < 1129.75) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
-```
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  filter(population_18 < 1425.50) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
-```
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  filter(population_18 < 1592.50) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
-```
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  filter(population_18 < 1756.00) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
-```
-
-The mean per capita income stabilize around the 10th percentile of the population in 2018.
-
-
-We will restrict tracts with a population of 1426 or more. 
-
-```{r, warning=FALSE, error=FALSE}
-
-census <- census %>%
-  filter(population_18 > 1425.50)
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}

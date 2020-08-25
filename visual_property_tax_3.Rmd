@@ -1,0 +1,248 @@
+---
+title: "Data Visualization"
+author: "Fernando Garcia - Drazzel Feliu"
+date: "8/25/2020"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(ggmap)
+library(tidycensus)
+library(mapview)
+library(sf)
+library(leaflet)
+library(viridis)
+library(maps)
+library(htmlwidgets)
+library(htmltools)
+library(tigris)
+library(reshape2)
+library(ggrepel)
+library(ggmap)
+
+rm(list = ls())
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+gent <- readRDS("gent.RDS")
+
+```
+
+#Different Maps with increase in property values as example
+
+Map #1
+
+```{r, warning=FALSE, error=FALSE}
+
+mapview(gent, zcol = "increase_value")
+
+```
+
+Map #2
+
+```{r, warning=FALSE, error=FALSE}
+ggplot() +
+  geom_sf(gent,
+    mapping = aes(
+      fill = increase_value,
+      color = increase_value
+    ),
+    inherit.aes = F,
+    alpha = .99
+  ) +
+  scale_fill_viridis() +
+  scale_color_viridis() +
+  theme_minimal() +
+  ggtitle("Percentage increase in property values between 2018 and 2013", )
+```
+
+Leaflet Options and Colors:
+
+```{r Leaflet Options - Community Areas}
+neigh_h_lights <- highlightOptions(
+  weight = 4.5,
+  color = "#ffffff",
+  fillOpacity = .5,
+  bringToFront = TRUE)
+
+neigh_l_options <- labelOptions(
+  style = list("font-weight" = "normal", padding = "3px 8px"),
+  textsize = "15px",
+  direction = "auto")
+
+neigh_labels <- sprintf(
+  paste0(
+  "<strong>Name: </strong>%s<br/>"),
+  community$community
+  ) %>% 
+  lapply(HTML)
+```
+
+```{r Leaflet Options - Census Tracts}
+tract_h_lights <- highlightOptions(
+  weight = 4.5,
+  color = "#ffffff",
+  fillOpacity = .5,
+  bringToFront = TRUE)
+
+tract_l_options <- labelOptions(
+  style = list("font-weight" = "normal", padding = "3px 8px"),
+  textsize = "15px",
+  direction = "auto")
+
+tract_labels <- sprintf(
+  paste0(
+  "<strong>Name: </strong>%s<br/>",
+  "<strong>Median Income 2013: </strong>%g<br/>",
+  "<strong>Median Income 2018: </strong>%g<br/>",
+  "<strong>Change in Median Income: </strong>%g<br/>"),
+  gent$NAME,
+  gent$income_13,
+  gent$income_18,
+  gent$increase_income
+  ) %>% 
+  lapply(HTML)
+```
+
+
+```{r, warning=FALSE, error=FALSE}
+
+color_200k <- colorNumeric(
+  palette = c("white", "blue"),
+  domain = gent$increase_value
+)
+```
+
+Map #3:
+
+
+```{r}
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = color_200k(gent$increase_value),
+    weight = 2.5,
+    fillOpacity = .55,
+    smoothFactor = .2
+  ) %>%
+  addLegend(
+    title = "Percentage increase of housing values between 2018 and 2013",
+    pal = color_200k,
+    values = gent$increase_value,
+    position = "topright"
+  )
+
+```
+
+
+These are the tracts that would be gentrified according to definition 1:
+
+
+```{r}
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(gent %>% filter(gent$gentri_1==1)),
+    color = "black",
+    fillColor = color_200k(gent$increase_income),
+    weight = 2.5,
+    fillOpacity = .3,
+    smoothFactor = .2,
+    popup = tract_labels,
+    popupOptions = tract_l_options,
+    highlightOptions = tract_h_lights,
+    group = "Gentrification By Education"
+  ) %>%
+  addPolygons(
+    data = st_geometry(community),
+    popup = neigh_labels,
+    popupOptions = neigh_l_options,
+    highlightOptions = neigh_h_lights,
+    group = "Community Areas") %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = gent$increase_value,
+    position = "topright"
+  ) %>% 
+  addLayersControl(
+    overlayGroups = c("Gentrification By Education", "Community Areas"),
+    position = "bottomright")
+
+
+```
+
+
+These are the tracts that would be gentrified according to definition 2:
+
+```{r}
+
+map <- leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(gent %>% filter(gent$gentri_2==1)),
+    color = "black",
+    fillColor = color_200k(gent$increase_value),
+    weight = 2.5,
+    fillOpacity = .55,
+    smoothFactor = .2
+  ) %>%
+  addPolygons(
+    data = st_geometry(community)) %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = gent$increase_value,
+    position = "topright"
+  )
+saveWidget(map, "downstate_200k.html")
+
+map
+```
+
+
+These are the tracts that would be gentrified according to definition 3:
+
+```{r}
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(gent %>% filter(gent$one_gentri_3==1)),
+    color = "black",
+    fillColor = color_200k(gent$gentri_3),
+    weight = 2.5,
+    fillOpacity = .3,
+    smoothFactor = .2,
+    popup = tract_labels,
+    popupOptions = tract_l_options,
+    highlightOptions = tract_h_lights,
+    group = "Gentrification By Education"
+  ) %>%
+  addPolygons(
+    data = st_geometry(community),
+    popup = neigh_labels,
+    popupOptions = neigh_l_options,
+    highlightOptions = neigh_h_lights,
+    group = "Community Areas") %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = gent$gentri_3,
+    position = "topright"
+  ) %>% 
+  addLayersControl(
+    overlayGroups = c("Gentrification By Education", "Community Areas"),
+    position = "bottomright")
+
+```
+
