@@ -35,15 +35,7 @@ gent <- readRDS("gent.RDS")
 
 #Different Maps with increase in property values as example
 
-Map #1
-
-```{r, warning=FALSE, error=FALSE}
-
-mapview(gent, zcol = "increase_value")
-
-```
-
-Map #2
+Using ggplot:
 
 ```{r, warning=FALSE, error=FALSE}
 ggplot() +
@@ -243,6 +235,43 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addLayersControl(
     overlayGroups = c("Gentrification By Education", "Community Areas"),
     position = "bottomright")
+
+```
+
+These are the tracts that are gentrified according to definition 4:
+
+```{r}
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_geometry(gent %>% filter(gent$one_gentri_4==1)),
+    color = "black",
+    fillColor = color_200k(gent$increase_income),
+    weight = 2.5,
+    fillOpacity = .3,
+    smoothFactor = .2,
+    popup = tract_labels,
+    popupOptions = tract_l_options,
+    highlightOptions = tract_h_lights,
+    group = "Gentrification By Education"
+  ) %>%
+  addPolygons(
+    data = st_geometry(community),
+    popup = neigh_labels,
+    popupOptions = neigh_l_options,
+    highlightOptions = neigh_h_lights,
+    group = "Community Areas") %>%
+  addLegend(
+    title = "Gentrified tracts between 2018 and 2013",
+    pal = color_200k,
+    values = gent$increase_value,
+    position = "topright"
+  ) %>% 
+  addLayersControl(
+    overlayGroups = c("Gentrification By Education", "Community Areas"),
+    position = "bottomright")
+
 
 ```
 

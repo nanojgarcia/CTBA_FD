@@ -43,7 +43,10 @@ census_data <- get_acs(
     prof_18 = "B15003_024",                 #population with a professional's degree
     phd_18 = "B15003_025",                  #population with a phd
     median_rent_18 = "B25064_001",
-    median_rent_income_18 = "B25071_001"    #median rent over income
+    median_rent_income_18 = "B25071_001",   #median rent over income
+    median_year_built = "B25035_001",
+    year_built_18 = "B25034_001",
+    built_2014_18="B25034_002"
   ),
   state = "IL",
   county = "Cook County",
@@ -59,6 +62,8 @@ census_data <- census_data %>%
 
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
+
+head(census_data)
 
 ```
 
@@ -117,16 +122,18 @@ racedata <- racedataindi %>%
   group_by(GEOID) %>% 
   mutate(sum_18=sum(estimate))
 
-racedata <- merge(racedata,racecodebook[c(1,2)],by.x="variable",by.y="name") %>%
-  select(-variable) %>%
-  mutate(label=str_remove(label,"Estimate!!Total!!Population of one race!!")) %>% 
-  group_by(GEOID) %>% 
+racedata <- racedata %>%
+  select(-c(moe)) %>%
+  spread(key = variable, value = estimate) %>% 
   arrange(GEOID)
 
 racedata <- racedata %>%
-  select(-c(moe)) %>%
-  spread(key = label, value = estimate) %>% 
-  arrange(GEOID)
+  rename(white_18 = C02003_003, 
+         black_18 = C02003_004, 
+         indian_native_18 = C02003_005,
+         asian_18 = C02003_006,
+         native_pacific_18 = C02003_007,
+         other_race_18 = C02003_008)
 
 ```
 
@@ -220,16 +227,18 @@ racedata <- racedataindi %>%
   group_by(GEOID) %>% 
   mutate(sum_13=sum(estimate))
 
-racedata <- merge(racedata,racecodebook[c(1,2)],by.x="variable",by.y="name") %>%
-  select(-variable) %>%
-  mutate(label=str_remove(label,"Estimate!!Total!!Population of one race!!")) %>% 
-  group_by(GEOID) %>% 
+racedata <- racedata %>%
+  select(-c(moe)) %>%
+  spread(key = variable, value = estimate) %>% 
   arrange(GEOID)
 
 racedata <- racedata %>%
-  select(-c(moe)) %>%
-  spread(key = label, value = estimate) %>% 
-  arrange(GEOID)
+  rename(white_13 = C02003_003, 
+         black_13 = C02003_004, 
+         indian_native_13 = C02003_005,
+         asian_13 = C02003_006,
+         native_pacific_13 = C02003_007,
+         other_race_13 = C02003_008)
 
 ```
 
@@ -243,27 +252,6 @@ census_data_13 <- left_join(census_data, racedata, by=c ("GEOID", "NAME"))
 
 ```
 
-```{r, warning=FALSE, error=FALSE}
-census_data_13 <- census_data_13 %>%
-  rename("White 13"= "White")
-
-census_data_13 <- census_data_13 %>%
-  rename("Some other race 13"="Some other race")
-
-census_data_13 <- census_data_13 %>%
-  rename("Native Hawaiian and Other Pacific Islander  13" = 
-           "Native Hawaiian and Other Pacific Islander")
-
-census_data_13 <- census_data_13 %>%
-  rename("Black or African American  13" = "Black or African American")
-
-census_data_13 <- census_data_13 %>%
-  rename("Asian alone  13" = "Asian alone")
-
-census_data_13 <- census_data_13 %>%
-  rename("American Indian and Alaska Native  13" = "American Indian and Alaska Native")
-
-```
 
 Then, we will join databases from 2018 and 2013
 

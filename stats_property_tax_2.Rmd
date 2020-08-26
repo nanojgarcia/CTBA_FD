@@ -76,7 +76,7 @@ census %>%
 
 ```
 
-Median household income is \$ 57,272 and per capita income mean is \$27,879 in 2013.
+Median household income is \$ 58,676.28 and per capita income mean is \$28,747.67 in 2013.
 
 
 #Gentrification:
@@ -128,8 +128,6 @@ ggplot(census) +
 
 ``` 
 
-The cumulative distribution looks like this:
-
 ```{r, warning=FALSE, error=FALSE}
 census_rest <- census %>%
   filter(increase_value > 0)
@@ -141,19 +139,30 @@ plot(ecdf(census_rest$increase_value),
 abline(h=0.95, col="blue")
 ```
 
-The last 5% of the distribution gets a 50% or more of an increase in home values. We can use this to define gentrification.
 
-#First definition of gentrification:
+The cumulative distribution looks like this:
+
+```{r, warning=FALSE, error=FALSE}
+homeincrease = census_rest$increase_value
+
+quantile(homeincrease, c(.8, .85, .9, .95))
+```
+
+The last 10% of the distribution gets a 36% or more of an increase in home values. We can use this to define gentrification.
+
+#First definition of gentrification
+
+We use the 90th percentile of the home value increase 
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
   mutate(gentri_1 = case_when(
-    increase_value > 50 & value_18 > 200000 ~ 1,
-    increase_value > 25 & value_18 > 220000 ~1,
-    increase_value <= 50 & (value_18 > 200000 & value_18 < 220000) ~ 0,
-    (increase_value > 25 & increase_value <= 50) & value_18 <= 220000 ~ 0,
+    increase_value > 36 & value_18 > 180800 ~ 1,
+    increase_value > 25 & value_18 > 226000 ~ 1,
+    increase_value <= 36 & (value_18 > 180800 & value_18 < 226000) ~ 0,
+    (increase_value > 25 & increase_value <= 36) & value_18 <= 226000 ~ 0,
     increase_value <= 25 ~ 0,
-    value_18 <= 200000 ~ 0
+    value_18 <= 180800 ~ 0
     )
   )
 ```
@@ -166,7 +175,7 @@ census %>%
 
 ```
 
-This measure of gentrification reaches 75 tracts.
+This measure of gentrification reaches 76 tracts.
 
 
 #Second definition of gentrification:
@@ -175,12 +184,12 @@ This measure of gentrification reaches 75 tracts.
 
 census <- census %>%
   mutate(gentri_2 = case_when(
-    increase_value > 50 & household_income_13 <= 57272.42 ~ 1,
-    increase_value > 25 & household_income_13 <= 40000 ~1,
-    (increase_value > 25 & increase_value <= 50) & 
-      (household_income_13 > 40000 & household_income_13 < 57272.42) ~ 0,
+    increase_value > 36 & household_income_13 <= 58676 ~ 1,
+    increase_value > 25 & household_income_13 <= 46900 ~1,
+    (increase_value > 25 & increase_value <= 36) & 
+      (household_income_13 > 46900 & household_income_13 < 58676) ~ 0,
     increase_value <= 25 ~ 0,
-    household_income_13 > 57272.42 ~ 0
+    household_income_13 > 58676 ~ 0
     )
   )
 
@@ -194,13 +203,13 @@ census %>%
 
 ```
 
-This measure of gentrification reaches 21 tracts.
+This measure of gentrification reaches 35 tracts.
 
 #Gentrification definition according to Brummet, Reed, 2019. 
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(gentri_3 = (bc_18  - bc_13)/ population_13)
+  mutate(gentri_3 = (bc_18  - bc_13) / population_13)
 
 ```
 
@@ -223,7 +232,7 @@ What is the 90th percentile of the gentrification's indicator:
 ```{r, warning=FALSE, error=FALSE}
 gentrification = census$gentri_3
 
-quantile(gentrification, c(.90), na.rm = T) 
+quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
 ```
 
 We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
@@ -235,9 +244,9 @@ census %>%
 
 census <- census %>%
   mutate(one_gentri_3 = case_when(
-    gentri_3 >= 0.1143626 & household_income_13 < 57272.42 ~ 1,
-    household_income_13 > 57272.42 ~ 0,
-    gentri_3 < 0.1143626 ~ 0
+    gentri_3 >= 0.1146914 & household_income_13 < 58676 ~ 1,
+    household_income_13 > 58676 ~ 0,
+    gentri_3 < 0.1146914 ~ 0
     )
   )
 ```
@@ -248,7 +257,93 @@ census %>%
   count()
 ```
 
-This measure of gentrification reaches 20 tracts.
+This measure of gentrification reaches 22 tracts.
+
+
+
+Gentrification definition number 4 using racial data:
+
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(gentri_4 = (white_18  - white_13) / sum_13)
+
+```
+
+```{r}
+
+census %>%
+  summarise(median_gentri_4=median(gentri_4, na.rm=T))
+
+ggplot(census) +
+  geom_histogram(aes(x = gentri_4, y = ..density..),
+    colour = "black", fill = "white"
+  )  +
+  geom_vline(xintercept = 0.01232853, color="blue") +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+What is the 90th percentile of the gentrification's indicator:
+
+```{r, warning=FALSE, error=FALSE}
+gentrification = census$gentri_4
+
+quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
+```
+
+We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  summarise(median_income_13=median(household_income_13, na.rm = T))
+
+census <- census %>%
+  mutate(one_gentri_4 = case_when(
+    gentri_4 >= 0.15172783 & household_income_13 < 58676 ~ 1,
+    household_income_13 > 58676 ~ 0,
+    gentri_4 < 0.15172783 ~ 0
+    )
+  )
+```
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  filter(one_gentri_4==1) %>%
+  count()
+```
+
+Definition number 4 reaches 23 tracts.
+
+
+How many tracts coincide between definition 1 and 2?
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  mutate(common_gent = gentri_1*gentri_2) %>%
+  filter(common_gent==1) %>%
+  count()
+```
+
+
+How many tracts coincide between definition 1 and 3?
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  mutate(common_gent = gentri_1*one_gentri_3) %>%
+  filter(common_gent==1) %>%
+  count()
+```
+
+How many tracts coincide between definition 1 and 4?
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  mutate(common_gent = gentri_1*one_gentri_4) %>%
+  filter(common_gent==1) %>%
+  count()
+```
 
 How many tracts coincide between definition 2 and 3?
 
@@ -259,7 +354,24 @@ census %>%
   count()
 ```
 
+How many tracts coincide between definition 2 and 4?
 
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  mutate(common_gent = gentri_2*one_gentri_4) %>%
+  filter(common_gent==1) %>%
+  count()
+```
+
+
+How many tracts coincide between definition 3 and 4?
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  mutate(common_gent = one_gentri_3*one_gentri_4) %>%
+  filter(common_gent==1) %>%
+  count()
+```
 
 Summary statistics for gentrified areas:
 
