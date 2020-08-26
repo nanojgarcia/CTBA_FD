@@ -270,6 +270,13 @@ census <- census %>%
 
 ```
 
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(gentri_5 = (white_18/white_13) / (sum_18/sum_13))
+
+```
+
 ```{r}
 
 census %>%
@@ -372,6 +379,60 @@ census %>%
   filter(common_gent==1) %>%
   count()
 ```
+
+```{r, warning=FALSE, error=FALSE}
+
+census <- census %>%
+  mutate(gentri_5 = ((white_18/white_13) / (sum_18/sum_13)-1)*100)
+
+```
+
+```{r}
+
+census %>%
+  summarise(median_gentri_5=median(gentri_5, na.rm=T))
+
+ggplot(census) +
+  geom_histogram(aes(x = gentri_5, y = ..density..),
+                 binwidth = .5,
+    colour = "black", fill = "white"
+  )  +
+  geom_vline(xintercept = 2.077133, color="blue") +
+  ggtitle("Histogram price increase in home values")
+
+``` 
+
+What is the 90th percentile of the gentrification's indicator:
+
+```{r, warning=FALSE, error=FALSE}
+gentrification = census$gentri_5
+
+quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
+```
+
+We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
+
+```{r, warning=FALSE, error=FALSE}
+
+census %>%
+  summarise(median_income_13=median(household_income_13, na.rm = T))
+
+census <- census %>%
+  mutate(one_gentri_4 = case_when(
+    gentri_4 >= 0.15172783 & household_income_13 < 58676 ~ 1,
+    household_income_13 > 58676 ~ 0,
+    gentri_4 < 0.15172783 ~ 0
+    )
+  )
+```
+
+```{r, warning=FALSE, error=FALSE}
+census %>%
+  filter(one_gentri_4==1) %>%
+  count()
+```
+
+
 
 Summary statistics for gentrified areas:
 
