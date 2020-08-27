@@ -270,12 +270,7 @@ census <- census %>%
 
 ```
 
-```{r, warning=FALSE, error=FALSE}
 
-census <- census %>%
-  mutate(gentri_5 = (white_18/white_13) / (sum_18/sum_13))
-
-```
 
 ```{r}
 

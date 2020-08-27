@@ -63,7 +63,6 @@ census_data <- census_data %>%
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
 
-head(census_data)
 
 ```
 
@@ -99,7 +98,7 @@ codebook <- load_variables(2018,"acs5")
 
 racecodebook <- codebook %>% 
   filter(str_detect(label,"race")) %>% 
-  filter(str_detect(label,"Population of one")) %>%
+  filter(str_detect(label,"Population of one race")) %>%
   mutate(names="name", count=1:7, merge=paste(names,count, sep="")) %>%
   select(-c(names,count))
 
@@ -107,7 +106,12 @@ racecodebook <- codebook %>%
 
 ```{r message=FALSE, warning=FALSE}
 racedataindi <- get_acs(geography = "tract",
-        variables = unlist(racecodebook$name),
+        variables = c(unlist(racecodebook$name), 
+                      "C02003_009",
+                      "B03003_003",
+                      "B03002_003",
+                      "B03002_004"
+                      ),
         state = "IL",
         county = "Cook County",
         geometry = T,
@@ -133,7 +137,15 @@ racedata <- racedata %>%
          indian_native_18 = C02003_005,
          asian_18 = C02003_006,
          native_pacific_18 = C02003_007,
-         other_race_18 = C02003_008)
+         other_race_18 = C02003_008,
+         two_or_more_18 = C02003_009,
+         latino_18 = B03003_003,
+         white_not_latino_18 = B03002_003,
+         black_not_latino_18 = B03002_004
+         )
+
+racedata <- racedata %>%
+  mutate(sum_18=sum_18-latino_18-white_not_latino_18-black_not_latino_18)
 
 ```
 
@@ -210,9 +222,13 @@ census_data <- census_data %>%
 
 
 ```{r message=FALSE, warning=FALSE}
-
 racedataindi <- get_acs(geography = "tract",
-        variables = unlist(racecodebook$name),
+        variables = c(unlist(racecodebook$name), 
+                      "C02003_009",
+                      "B03003_003",
+                      "B03002_003",
+                      "B03002_004"
+                      ),
         state = "IL",
         county = "Cook County",
         geometry = T,
@@ -238,7 +254,14 @@ racedata <- racedata %>%
          indian_native_13 = C02003_005,
          asian_13 = C02003_006,
          native_pacific_13 = C02003_007,
-         other_race_13 = C02003_008)
+         other_race_13 = C02003_008,
+         two_or_more_13 = C02003_009,
+         latino_13 = B03003_003,
+         white_not_latino_13 = B03002_003,
+         black_not_latino_13 = B03002_004
+         )
+racedata <- racedata %>%
+  mutate(sum_13=sum_13-latino_13-white_not_latino_13-black_not_latino_13)
 
 ```
 
@@ -334,7 +357,7 @@ census <- census %>%
 We will look into NAs: 
 
 ```{r}
-sapply(census, function(x) sum(is.na(x)))
+#sapply(census, function(x) sum(is.na(x)))
 ```
 
 Most of the variables have 3 NAs. These NAs are from O'Hare airport, Midway airport, and Taylor Park (Census Tract 3817) with no population.
@@ -342,6 +365,7 @@ Most of the variables have 3 NAs. These NAs are from O'Hare airport, Midway airp
 Outcome changes between 2018 and 2013:
 
 ```{r, warning=FALSE, error=FALSE}
+
 
 census <- census %>%
   mutate(increase_value = (value_18 / value_13 - 1) * 100)
