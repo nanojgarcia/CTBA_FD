@@ -379,6 +379,10 @@ census <- census %>%
   mutate(common_gent_3_4 = one_gentri_3*one_gentri_4)
 ```
 
+```{r, warning=FALSE, error=FALSE}
+saveRDS(census, file = "census.RDS") 
+```
+
 
 Summary statistics for gentrified areas:
 
