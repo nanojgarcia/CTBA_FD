@@ -239,8 +239,8 @@ We create a dummy variable if gentrification is beyond the 90th percentile of th
 
 ```{r, warning=FALSE, error=FALSE}
 
-census %>%
-  summarise(median_income_13=median(household_income_13, na.rm = T))
+#census %>%
+  #summarise(median_income_13=median(household_income_13, na.rm = T))
 
 census <- census %>%
   mutate(one_gentri_3 = case_when(
@@ -266,22 +266,21 @@ Gentrification definition number 4 using racial data:
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
-  mutate(gentri_4 = (white_18  - white_13) / sum_13)
+  mutate(gentri_4 = (white_not_latino_18  - white_not_latino_13) / sum_13)
 
 ```
 
 
-
 ```{r}
 
-census %>%
-  summarise(median_gentri_4=median(gentri_4, na.rm=T))
+#census %>%
+  #summarise(median_gentri_4=median(gentri_4, na.rm=T))
 
 ggplot(census) +
   geom_histogram(aes(x = gentri_4, y = ..density..),
     colour = "black", fill = "white"
   )  +
-  geom_vline(xintercept = 0.01232853, color="blue") +
+  geom_vline(xintercept = 0.002240093, color="blue") +
   ggtitle("Histogram price increase in home values")
 
 ``` 
@@ -298,14 +297,14 @@ We create a dummy variable if gentrification is beyond the 90th percentile of th
 
 ```{r, warning=FALSE, error=FALSE}
 
-census %>%
-  summarise(median_income_13=median(household_income_13, na.rm = T))
+#census %>%
+  #summarise(median_income_13=median(household_income_13, na.rm = T))
 
 census <- census %>%
   mutate(one_gentri_4 = case_when(
-    gentri_4 >= 0.15172783 & household_income_13 < 58676 ~ 1,
+    gentri_4 >= 0.09571333 & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_4 < 0.15172783 ~ 0
+    gentri_4 < 0.09571333 ~ 0
     )
   )
 ```
@@ -316,7 +315,7 @@ census %>%
   count()
 ```
 
-Definition number 4 reaches 23 tracts.
+Definition number 4 reaches 18 tracts.
 
 
 How many tracts coincide between definition 1 and 2?
@@ -376,57 +375,9 @@ census %>%
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-
 census <- census %>%
-  mutate(gentri_5 = ((white_18/white_13) / (sum_18/sum_13)-1)*100)
-
+  mutate(common_gent_3_4 = one_gentri_3*one_gentri_4)
 ```
-
-```{r}
-
-census %>%
-  summarise(median_gentri_5=median(gentri_5, na.rm=T))
-
-ggplot(census) +
-  geom_histogram(aes(x = gentri_5, y = ..density..),
-                 binwidth = .5,
-    colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 2.077133, color="blue") +
-  ggtitle("Histogram price increase in home values")
-
-``` 
-
-What is the 90th percentile of the gentrification's indicator:
-
-```{r, warning=FALSE, error=FALSE}
-gentrification = census$gentri_5
-
-quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
-```
-
-We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
-
-```{r, warning=FALSE, error=FALSE}
-
-census %>%
-  summarise(median_income_13=median(household_income_13, na.rm = T))
-
-census <- census %>%
-  mutate(one_gentri_4 = case_when(
-    gentri_4 >= 0.15172783 & household_income_13 < 58676 ~ 1,
-    household_income_13 > 58676 ~ 0,
-    gentri_4 < 0.15172783 ~ 0
-    )
-  )
-```
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  filter(one_gentri_4==1) %>%
-  count()
-```
-
 
 
 Summary statistics for gentrified areas:
@@ -442,7 +393,7 @@ census %>%
   filter(gentri_2==0) %>%
   summarise(mean_increase_edu = median(increase_education, na.rm = T))
 
-census_gen %>%
+census %>%
   filter(gentri_2==1) %>%
   summarise(mean_increase_bc = median(increase_bachelor, na.rm = T))
 

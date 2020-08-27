@@ -160,6 +160,63 @@ census_data_18 <- left_join(census_data, racedata, by = c("NAME", "GEOID"))
 
 ```
 
+#Year structure built 2018
+
+```{r message=FALSE, warning=FALSE}
+
+builtcodebook <- codebook %>% 
+  filter(str_detect(concept,"^YEAR STRUCTURE BUILT$")) %>% 
+  filter(str_detect(label,"Built")) %>%
+  mutate(names="name", count=1:10, merge=paste(names,count, sep="")) %>%
+  select(-c(names,count))
+
+```
+
+```{r message=FALSE, warning=FALSE}
+builtdataindi <- get_acs(geography = "tract",
+        variables = unlist(builtcodebook$name),
+        state = "IL",
+        county = "Cook County",
+        geometry = T,
+        year = 2018,
+        cb = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+builtdata <- builtdataindi %>%
+  select(-c(moe)) %>%
+  spread(key = variable, value = estimate) %>% 
+  arrange(GEOID)
+
+builtdata <- builtdata %>%
+  rename(built_14_18 = B25034_002, 
+         built_10_13_18 = B25034_003, 
+         built_00_09_18 = B25034_004,
+         built_90_99_18 = B25034_005,
+         built_80_89_18 = B25034_006,
+         built_70_79_18 = B25034_007,
+         built_60_69_18 = B25034_008,
+         built_50_59_18 = B25034_009,
+         built_40_49_18 = B25034_010,
+         built_39_18 = B25034_011
+         )
+
+
+```
+
+We will join both databases for 2018:
+
+```{r, warning=FALSE, error=FALSE}
+
+builtdata$geometry <- NULL
+
+
+census_data_18 <- left_join(census_data_18, builtdata, by = c("NAME", "GEOID"))
+
+```
+
+
 Now, we will pull the same data for year 2013:
 
 ```{r, warning=FALSE, error=FALSE}
@@ -275,6 +332,63 @@ census_data_13 <- left_join(census_data, racedata, by=c ("GEOID", "NAME"))
 
 ```
 
+#Year structure built 2013
+
+```{r message=FALSE, warning=FALSE}
+codebook <- load_variables(2013,"acs5")
+
+
+builtcodebook <- codebook %>% 
+  filter(str_detect(concept,"^YEAR STRUCTURE BUILT$")) %>% 
+  filter(str_detect(label,"Built")) %>%
+  mutate(names="name", count=1:9, merge=paste(names,count, sep="")) %>%
+  select(-c(names,count))
+
+```
+
+```{r message=FALSE, warning=FALSE}
+builtdataindi <- get_acs(geography = "tract",
+        variables = unlist(builtcodebook$name),
+        state = "IL",
+        county = "Cook County",
+        geometry = T,
+        year = 2013,
+        cb = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+builtdata <- builtdataindi %>%
+  select(-c(moe)) %>%
+  spread(key = variable, value = estimate) %>% 
+  arrange(GEOID)
+
+builtdata <- builtdata %>%
+  rename(built_10_13 = B25034_002, 
+         built_00_09_13 = B25034_003,
+         built_90_99_13 = B25034_004,
+         built_80_89_13 = B25034_005,
+         built_70_79_13 = B25034_006,
+         built_60_69_13 = B25034_007,
+         built_50_59_13 = B25034_008,
+         built_40_49_13 = B25034_009,
+         built_39_13 = B25034_010
+         )
+
+
+```
+
+We will join both databases for 2018:
+
+```{r, warning=FALSE, error=FALSE}
+
+builtdata$geometry <- NULL
+
+
+census_data_13 <- left_join(census_data_13, builtdata, by = c("NAME", "GEOID"))
+
+```
+
 
 Then, we will join databases from 2018 and 2013
 
@@ -361,6 +475,40 @@ We will look into NAs:
 ```
 
 Most of the variables have 3 NAs. These NAs are from O'Hare airport, Midway airport, and Taylor Park (Census Tract 3817) with no population.
+
+Share in race and hispanic population 
+
+```{r, warning=FALSE, error=FALSE}
+
+
+census <- census %>%
+  mutate(share_white_18 = white_18 / sum_18)
+
+census <- census %>%
+  mutate(share_black_18 = black_18 / sum_18)
+
+census <- census %>%
+  mutate(share_latino_18 = latino_18 / sum_18)
+
+census <- census %>%
+  mutate(share_white_only_18 = white_not_latino_18 / sum_18)
+
+census <- census %>%
+  mutate(share_white_13 = white_13 / sum_13)
+
+census <- census %>%
+  mutate(share_black_13 = black_13 / sum_13)
+
+census <- census %>%
+  mutate(share_latino_13 = latino_13 / sum_13)
+
+census <- census %>%
+  mutate(share_white_only_13 = white_not_latino_13 / sum_13)
+
+
+```
+
+
 
 Outcome changes between 2018 and 2013:
 
