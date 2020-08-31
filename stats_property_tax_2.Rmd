@@ -111,7 +111,7 @@ ggplot(census) +
     colour = "black", fill = "white"
   ) +
   geom_vline(xintercept = 4.334484, color="blue") +
-  ggtitle("Histogram price icnrease home values")
+  ggtitle("Histogram price increase home values")
 
 ``` 
 
@@ -154,7 +154,10 @@ The last 10% of the distribution gets a 36% or more of an increase in home value
 
 We use the 90th percentile of the home value increase 
 
+Significant increases in home values should be reflective of some broader sense of gentrification. As the neighborhood gentrifies, the value of property within the area should be increasing as wealthier individuals begin to displace the individuals living in the area prior. Using the defined distribution of changes in home values between 2013 and 2018, we use the 80% and 90% threshholds to identify gentrification patterns across the city.
+
 ```{r, warning=FALSE, error=FALSE}
+
 census <- census %>%
   mutate(gentri_1 = case_when(
     increase_value > 36 & value_18 > 180800 ~ 1,
@@ -180,6 +183,8 @@ This measure of gentrification reaches 76 tracts.
 
 #Second definition of gentrification:
 
+Gentrification isn't simply the increase in wealth for a neighborhood. We can confirm this by checking the demographic makeup of neighborhoods who have seen median income increases. This definition of gentrification then serves to identify the neighborhoods where were median incomes have changed drastically in a 5 year period.
+
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
@@ -192,6 +197,8 @@ census <- census %>%
     household_income_13 > 58676 ~ 0
     )
   )
+
+#I am not convinced of the value of this definition using both home value increase and level of income.
 
 ```
 
