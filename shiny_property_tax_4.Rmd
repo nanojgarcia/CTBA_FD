@@ -1,0 +1,63 @@
+---
+title: "Untitled"
+author: "Drazzel Feliu"
+date: "8/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+library(tidyverse)
+library(sf)
+library(viridis)
+library(leaflet)
+library(htmlwidgets)
+library(tidycensus)
+library(htmltools)
+library(openxlsx)
+library(snakecase)
+library(shiny)
+library(scales)
+options(tigris_use_cache = TRUE)
+```
+
+```{r}
+gent <- readRDS("gent.RDS")
+```
+
+
+```{r Shiny Map}
+shinyApp(ui = bootstrapPage(
+  tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
+  absolutePanel(top = 10, right = 10,
+                style="z-index:500;",
+                numericInput("range",
+                            h3("Property Values in 2018"), 
+                            min = min(gent$value_18),
+                            max = max(gent$value_18),
+                            value = min(gent$value_18), 
+                            step = 10),
+                numericInput("num_bc",
+                             h3("Number of Individuals with a Bachelor's Degree or Higher"),
+                             min = min(gent$bc_18),
+                             max = max(gent$bc_18),
+                             value = min(gent$bc_18),
+                             step = 10)),
+  leafletOutput("map1", width="100%",height="100%" )),
+
+server = function(input, output) {
+  output$map1 <- renderLeaflet({
+    mapfile <- gent %>%
+      filter(value_18 >= input$range,
+             bc_18 >= input$num_bc)
+leaflet() %>% addProviderTiles(providers$CartoDB.Positron) %>% 
+  addPolygons(data=st_geometry(mapfile),
+              color= "black",
+              weight=1.1,
+              fillColor = ifelse(mapfile$value_18>300000,"blue","red"),
+              smoothFactor = .4,
+              fillOpacity = .65)
+  })
+})
+```
+
