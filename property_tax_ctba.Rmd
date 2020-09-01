@@ -34,26 +34,25 @@ census_data <- get_acs(
   geography = "tract",
   variables = c(
     population_18 = "B01001_001",
-    income_18 = "B19013_001",               #median household income 
+    income_18 = "B19013_001", # median household income
     agg_income_18 = "B19313_001",
     avg_household_size_18 = "B25010_001",
-    value_18 = "B25077_001",                #median home values
-    bachelor_18 = "B15003_022",             #population with a bachelor's degree
-    master_18 = "B15003_023",               #population with a master's degree
-    prof_18 = "B15003_024",                 #population with a professional's degree
-    phd_18 = "B15003_025",                  #population with a phd
+    value_18 = "B25077_001", # median home values
+    bachelor_18 = "B15003_022", # population with a bachelor's degree
+    master_18 = "B15003_023", # population with a master's degree
+    prof_18 = "B15003_024", # population with a professional's degree
+    phd_18 = "B15003_025", # population with a phd
     median_rent_18 = "B25064_001",
-    median_rent_income_18 = "B25071_001",   #median rent over income
+    median_rent_income_18 = "B25071_001", # median rent over income
     median_year_built = "B25035_001",
     year_built_18 = "B25034_001",
-    built_2014_18="B25034_002"
+    built_2014_18 = "B25034_002"
   ),
   state = "IL",
   county = "Cook County",
   year = 2018,
   geometry = T
 )
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
@@ -62,19 +61,16 @@ census_data <- census_data %>%
 
 census_data <- census_data %>%
   spread(key = variable, value = estimate)
-
-
 ```
 
 We create the variable people with bachelor degree or more:
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  mutate(bc_18 = bachelor_18 + master_18 +prof_18 +phd_18 )
+  mutate(bc_18 = bachelor_18 + master_18 + prof_18 + phd_18)
 
 census_data <- census_data %>%
   select(-c(bachelor_18, master_18, prof_18, phd_18))
-
 ```
 
 We create income per capita and household income for year 2018:
@@ -82,71 +78,72 @@ We create income per capita and household income for year 2018:
 ```{r, warning=FALSE, error=FALSE}
 
 census_data <- census_data %>%
-  mutate(income_pc_18=agg_income_18/population_18) #create income per capita
+  mutate(income_pc_18 = agg_income_18 / population_18) # create income per capita
 
 
 census_data <- census_data %>%
-  mutate(household_income_18=(agg_income_18/population_18) * 
-           avg_household_size_18)     #create household income
-
+  mutate(household_income_18 = (agg_income_18 / population_18) *
+    avg_household_size_18) # create household income
 ```
 
 #Race data
 
 ```{r message=FALSE, warning=FALSE}
-codebook <- load_variables(2018,"acs5")
+codebook <- load_variables(2018, "acs5")
 
-racecodebook <- codebook %>% 
-  filter(str_detect(label,"race")) %>% 
-  filter(str_detect(label,"Population of one race")) %>%
-  mutate(names="name", count=1:7, merge=paste(names,count, sep="")) %>%
-  select(-c(names,count))
-
+racecodebook <- codebook %>%
+  filter(str_detect(label, "race")) %>%
+  filter(str_detect(label, "Population of one race")) %>%
+  mutate(names = "name", count = 1:7, merge = paste(names, count, sep = "")) %>%
+  select(-c(names, count))
 ```
 
 ```{r message=FALSE, warning=FALSE}
-racedataindi <- get_acs(geography = "tract",
-        variables = c(unlist(racecodebook$name), 
-                      "C02003_009",
-                      "B03003_003",
-                      "B03002_003",
-                      "B03002_004"
-                      ),
-        state = "IL",
-        county = "Cook County",
-        geometry = T,
-        year = 2018,
-        cb = FALSE)
+racedataindi <- get_acs(
+  geography = "tract",
+  variables = c(
+    unlist(racecodebook$name),
+    "C02003_009",
+    "B03003_003",
+    "B03002_003",
+    "B03002_004"
+  ),
+  state = "IL",
+  county = "Cook County",
+  geometry = T,
+  year = 2018,
+  cb = FALSE
+)
 ```
 
 ```{r message=FALSE, warning=FALSE}
 
-racedata <- racedataindi %>% 
-  filter(variable!="C02003_002") %>%
-  group_by(GEOID) %>% 
-  mutate(sum_18=sum(estimate))
+racedata <- racedataindi %>%
+  filter(variable != "C02003_002") %>%
+  group_by(GEOID) %>%
+  mutate(sum_18 = sum(estimate))
 
 racedata <- racedata %>%
   select(-c(moe)) %>%
-  spread(key = variable, value = estimate) %>% 
+  spread(key = variable, value = estimate) %>%
   arrange(GEOID)
 
 racedata <- racedata %>%
-  rename(white_18 = C02003_003, 
-         black_18 = C02003_004, 
-         indian_native_18 = C02003_005,
-         asian_18 = C02003_006,
-         native_pacific_18 = C02003_007,
-         other_race_18 = C02003_008,
-         two_or_more_18 = C02003_009,
-         latino_18 = B03003_003,
-         white_not_latino_18 = B03002_003,
-         black_not_latino_18 = B03002_004
-         )
+  rename(
+    white_18 = C02003_003,
+    black_18 = C02003_004,
+    indian_native_18 = C02003_005,
+    asian_18 = C02003_006,
+    native_pacific_18 = C02003_007,
+    other_race_18 = C02003_008,
+    two_or_more_18 = C02003_009,
+    latino_18 = B03003_003,
+    white_not_latino_18 = B03002_003,
+    black_not_latino_18 = B03002_004
+  )
 
 racedata <- racedata %>%
-  mutate(sum_18=sum_18-latino_18-white_not_latino_18-black_not_latino_18)
-
+  mutate(sum_18 = sum_18 - latino_18 - white_not_latino_18 - black_not_latino_18)
 ```
 
 We will join both databases for 2018:
@@ -157,52 +154,51 @@ racedata$geometry <- NULL
 
 
 census_data_18 <- left_join(census_data, racedata, by = c("NAME", "GEOID"))
-
 ```
 
 #Year structure built 2018
 
 ```{r message=FALSE, warning=FALSE}
 
-builtcodebook <- codebook %>% 
-  filter(str_detect(concept,"^YEAR STRUCTURE BUILT$")) %>% 
-  filter(str_detect(label,"Built")) %>%
-  mutate(names="name", count=1:10, merge=paste(names,count, sep="")) %>%
-  select(-c(names,count))
-
+builtcodebook <- codebook %>%
+  filter(str_detect(concept, "^YEAR STRUCTURE BUILT$")) %>%
+  filter(str_detect(label, "Built")) %>%
+  mutate(names = "name", count = 1:10, merge = paste(names, count, sep = "")) %>%
+  select(-c(names, count))
 ```
 
 ```{r message=FALSE, warning=FALSE}
-builtdataindi <- get_acs(geography = "tract",
-        variables = unlist(builtcodebook$name),
-        state = "IL",
-        county = "Cook County",
-        geometry = T,
-        year = 2018,
-        cb = FALSE)
+builtdataindi <- get_acs(
+  geography = "tract",
+  variables = unlist(builtcodebook$name),
+  state = "IL",
+  county = "Cook County",
+  geometry = T,
+  year = 2018,
+  cb = FALSE
+)
 ```
 
 ```{r message=FALSE, warning=FALSE}
 
 builtdata <- builtdataindi %>%
   select(-c(moe)) %>%
-  spread(key = variable, value = estimate) %>% 
+  spread(key = variable, value = estimate) %>%
   arrange(GEOID)
 
 builtdata <- builtdata %>%
-  rename(built_14_18 = B25034_002, 
-         built_10_13_18 = B25034_003, 
-         built_00_09_18 = B25034_004,
-         built_90_99_18 = B25034_005,
-         built_80_89_18 = B25034_006,
-         built_70_79_18 = B25034_007,
-         built_60_69_18 = B25034_008,
-         built_50_59_18 = B25034_009,
-         built_40_49_18 = B25034_010,
-         built_39_18 = B25034_011
-         )
-
-
+  rename(
+    built_14_18 = B25034_002,
+    built_10_13_18 = B25034_003,
+    built_00_09_18 = B25034_004,
+    built_90_99_18 = B25034_005,
+    built_80_89_18 = B25034_006,
+    built_70_79_18 = B25034_007,
+    built_60_69_18 = B25034_008,
+    built_50_59_18 = B25034_009,
+    built_40_49_18 = B25034_010,
+    built_39_18 = B25034_011
+  )
 ```
 
 We will join both databases for 2018:
@@ -213,7 +209,6 @@ builtdata$geometry <- NULL
 
 
 census_data_18 <- left_join(census_data_18, builtdata, by = c("NAME", "GEOID"))
-
 ```
 
 
@@ -255,23 +250,21 @@ census_data <- census_data %>%
 
 ```{r, warning=FALSE, error=FALSE}
 census_data <- census_data %>%
-  mutate(bc_13 = bachelor_13 + master_13 + prof_13 +phd_13 )
+  mutate(bc_13 = bachelor_13 + master_13 + prof_13 + phd_13)
 
 census_data <- census_data %>%
   select(-c(bachelor_13, master_13, prof_13, phd_13))
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_data <- census_data %>%
-  mutate(income_pc_13=agg_income_13/population_13) #create income per capita
+  mutate(income_pc_13 = agg_income_13 / population_13) # create income per capita
 
 
 census_data <- census_data %>%
-  mutate(household_income_13=(agg_income_13/population_13) * 
-           avg_household_size_13) #create household income
-
+  mutate(household_income_13 = (agg_income_13 / population_13) *
+    avg_household_size_13) # create household income
 ```
 
 
@@ -279,47 +272,50 @@ census_data <- census_data %>%
 
 
 ```{r message=FALSE, warning=FALSE}
-racedataindi <- get_acs(geography = "tract",
-        variables = c(unlist(racecodebook$name), 
-                      "C02003_009",
-                      "B03003_003",
-                      "B03002_003",
-                      "B03002_004"
-                      ),
-        state = "IL",
-        county = "Cook County",
-        geometry = T,
-        year = 2013,
-        cb = FALSE)
+racedataindi <- get_acs(
+  geography = "tract",
+  variables = c(
+    unlist(racecodebook$name),
+    "C02003_009",
+    "B03003_003",
+    "B03002_003",
+    "B03002_004"
+  ),
+  state = "IL",
+  county = "Cook County",
+  geometry = T,
+  year = 2013,
+  cb = FALSE
+)
 ```
 
 ```{r message=FALSE, warning=FALSE}
 
-racedata <- racedataindi %>% 
-  filter(variable!="C02003_002") %>%
-  group_by(GEOID) %>% 
-  mutate(sum_13=sum(estimate))
+racedata <- racedataindi %>%
+  filter(variable != "C02003_002") %>%
+  group_by(GEOID) %>%
+  mutate(sum_13 = sum(estimate))
 
 racedata <- racedata %>%
   select(-c(moe)) %>%
-  spread(key = variable, value = estimate) %>% 
+  spread(key = variable, value = estimate) %>%
   arrange(GEOID)
 
 racedata <- racedata %>%
-  rename(white_13 = C02003_003, 
-         black_13 = C02003_004, 
-         indian_native_13 = C02003_005,
-         asian_13 = C02003_006,
-         native_pacific_13 = C02003_007,
-         other_race_13 = C02003_008,
-         two_or_more_13 = C02003_009,
-         latino_13 = B03003_003,
-         white_not_latino_13 = B03002_003,
-         black_not_latino_13 = B03002_004
-         )
+  rename(
+    white_13 = C02003_003,
+    black_13 = C02003_004,
+    indian_native_13 = C02003_005,
+    asian_13 = C02003_006,
+    native_pacific_13 = C02003_007,
+    other_race_13 = C02003_008,
+    two_or_more_13 = C02003_009,
+    latino_13 = B03003_003,
+    white_not_latino_13 = B03002_003,
+    black_not_latino_13 = B03002_004
+  )
 racedata <- racedata %>%
-  mutate(sum_13=sum_13-latino_13-white_not_latino_13-black_not_latino_13)
-
+  mutate(sum_13 = sum_13 - latino_13 - white_not_latino_13 - black_not_latino_13)
 ```
 
 We will join both databases for year 2013:
@@ -328,54 +324,53 @@ We will join both databases for year 2013:
 
 racedata$geometry <- NULL
 
-census_data_13 <- left_join(census_data, racedata, by=c ("GEOID", "NAME"))
-
+census_data_13 <- left_join(census_data, racedata, by = c("GEOID", "NAME"))
 ```
 
 #Year structure built 2013
 
 ```{r message=FALSE, warning=FALSE}
-codebook <- load_variables(2013,"acs5")
+codebook <- load_variables(2013, "acs5")
 
 
-builtcodebook <- codebook %>% 
-  filter(str_detect(concept,"^YEAR STRUCTURE BUILT$")) %>% 
-  filter(str_detect(label,"Built")) %>%
-  mutate(names="name", count=1:9, merge=paste(names,count, sep="")) %>%
-  select(-c(names,count))
-
+builtcodebook <- codebook %>%
+  filter(str_detect(concept, "^YEAR STRUCTURE BUILT$")) %>%
+  filter(str_detect(label, "Built")) %>%
+  mutate(names = "name", count = 1:9, merge = paste(names, count, sep = "")) %>%
+  select(-c(names, count))
 ```
 
 ```{r message=FALSE, warning=FALSE}
-builtdataindi <- get_acs(geography = "tract",
-        variables = unlist(builtcodebook$name),
-        state = "IL",
-        county = "Cook County",
-        geometry = T,
-        year = 2013,
-        cb = FALSE)
+builtdataindi <- get_acs(
+  geography = "tract",
+  variables = unlist(builtcodebook$name),
+  state = "IL",
+  county = "Cook County",
+  geometry = T,
+  year = 2013,
+  cb = FALSE
+)
 ```
 
 ```{r message=FALSE, warning=FALSE}
 
 builtdata <- builtdataindi %>%
   select(-c(moe)) %>%
-  spread(key = variable, value = estimate) %>% 
+  spread(key = variable, value = estimate) %>%
   arrange(GEOID)
 
 builtdata <- builtdata %>%
-  rename(built_10_13 = B25034_002, 
-         built_00_09_13 = B25034_003,
-         built_90_99_13 = B25034_004,
-         built_80_89_13 = B25034_005,
-         built_70_79_13 = B25034_006,
-         built_60_69_13 = B25034_007,
-         built_50_59_13 = B25034_008,
-         built_40_49_13 = B25034_009,
-         built_39_13 = B25034_010
-         )
-
-
+  rename(
+    built_10_13 = B25034_002,
+    built_00_09_13 = B25034_003,
+    built_90_99_13 = B25034_004,
+    built_80_89_13 = B25034_005,
+    built_70_79_13 = B25034_006,
+    built_60_69_13 = B25034_007,
+    built_50_59_13 = B25034_008,
+    built_40_49_13 = B25034_009,
+    built_39_13 = B25034_010
+  )
 ```
 
 We will join both databases for 2018:
@@ -386,7 +381,6 @@ builtdata$geometry <- NULL
 
 
 census_data_13 <- left_join(census_data_13, builtdata, by = c("NAME", "GEOID"))
-
 ```
 
 
@@ -419,7 +413,6 @@ community <- st_transform(
   community,
   4326
 )
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
@@ -434,7 +427,7 @@ We do the intersection of both areas:
 ```{r}
 census$inter <- as.numeric(st_intersects(census, cityboundary))
 
-census <- census %>% 
+census <- census %>%
   filter(inter == 1)
 
 census <- census %>%
@@ -471,7 +464,7 @@ census <- census %>%
 We will look into NAs: 
 
 ```{r}
-#sapply(census, function(x) sum(is.na(x)))
+# sapply(census, function(x) sum(is.na(x)))
 ```
 
 Most of the variables have 3 NAs. These NAs are from O'Hare airport, Midway airport, and Taylor Park (Census Tract 3817) with no population.
@@ -504,8 +497,6 @@ census <- census %>%
 
 census <- census %>%
   mutate(share_white_only_13 = white_not_latino_13 / sum_13)
-
-
 ```
 
 
@@ -519,7 +510,7 @@ census <- census %>%
   mutate(increase_value = (value_18 / value_13 - 1) * 100)
 
 census <- census %>%
-  mutate(increase_income = (income_18 / income_13 - 1) * 100)
+  mutate(increase_income = (household_income_18 / household_income_13 - 1) * 100)
 
 census <- census %>%
   mutate(increase_income_pc = (income_pc_18 / income_pc_13 - 1) * 100)
@@ -528,8 +519,7 @@ census <- census %>%
   mutate(increase_pop = (population_18 / population_13 - 1) * 100)
 
 census <- census %>%
-  mutate(increase_rent = (median_rent_18/median_rent_13-1)*100)
-
+  mutate(increase_rent = (median_rent_18 / median_rent_13 - 1) * 100)
 ```
 
 What limit should we impose on population?
@@ -541,13 +531,11 @@ census %>%
 
 ggplot(census) +
   geom_histogram(aes(x = population_18, y = ..density..),
-                 binwidth = 100,
+    binwidth = 100,
     colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 3069.5, color="blue") +
+  ) +
+  geom_vline(xintercept = 3069.5, color = "blue") +
   ggtitle("Histogram of Population by tracts")
-
-
 ```
 
 ```{r}
@@ -558,14 +546,13 @@ ggplot(census) +
   ) +
   xlim(c(0, 3500)) +
   ggtitle("Histogram price increase in home values")
-
 ``` 
 
 
 ```{r, warning=FALSE, error=FALSE}
-population = census$population_18
+population <- census$population_18
 
-quantile(population, c(.01, .05, .10, .15, .20), na.rm = T) 
+quantile(population, c(.01, .05, .10, .15, .20), na.rm = T)
 ```
 
 Looking at the percentiles we can see that the distribution accumulates more observations at the 10th percentile. We can check how the mean per capita income stabilize after we restrict the sample to these thresholds: 
@@ -574,47 +561,41 @@ Looking at the percentiles we can see that the distribution accumulates more obs
 
 census %>%
   filter(population_18 < 773) %>%
-  summarise(mean_income_pc= mean(income_pc_18, na.rm=T))
-
+  summarise(mean_income_pc = mean(income_pc_18, na.rm = T))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
   filter(population_18 < 1129.75) %>%
-  summarise(mean_income_pc= mean(income_pc_18, na.rm=T))
-
+  summarise(mean_income_pc = mean(income_pc_18, na.rm = T))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
   filter(population_18 < 1425.50) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
+  summarise(mean_income_pc = mean(increase_income_pc, na.rm = T))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
   filter(population_18 < 1592.50) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
+  summarise(mean_income_pc = mean(increase_income_pc, na.rm = T))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
   filter(population_18 < 1756.00) %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
+  summarise(mean_income_pc = mean(increase_income_pc, na.rm = T))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
-  summarise(mean_income_pc= mean(increase_income_pc, na.rm=T))
-
+  summarise(mean_income_pc = mean(increase_income_pc, na.rm = T))
 ```
 
 The mean per capita income stabilize around the 10th percentile of the population in 2018.
@@ -623,21 +604,18 @@ Is there a correlation between census tract's size and income?
 
 ```{r, warning=FALSE, error=FALSE}
 
-ggplot(data = census) + 
-  geom_point(mapping = aes(x = income_18, y = population_18))+ 
-  geom_smooth(mapping = aes(x = income_18, y = population_18), method=lm)
-
+ggplot(data = census) +
+  geom_point(mapping = aes(x = income_18, y = population_18)) +
+  geom_smooth(mapping = aes(x = income_18, y = population_18), method = lm)
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
   filter(population_18 > 1425.50) %>%
-  ggplot() + 
-  geom_point(mapping = aes(x = income_18, y = population_18))+ 
-  geom_smooth(mapping = aes(x = income_18, y = population_18), method=lm)
-  
-
+  ggplot() +
+  geom_point(mapping = aes(x = income_18, y = population_18)) +
+  geom_smooth(mapping = aes(x = income_18, y = population_18), method = lm)
 ```
 
 We will restrict tracts with a population of 1426 or more. 
@@ -646,10 +624,8 @@ We will restrict tracts with a population of 1426 or more.
 
 census <- census %>%
   filter(population_18 > 1425.50)
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-saveRDS(census, file = "census.RDS") 
+saveRDS(census, file = "census.RDS")
 ```
-

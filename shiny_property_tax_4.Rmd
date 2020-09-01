@@ -14,7 +14,6 @@ library(leaflet)
 library(htmlwidgets)
 library(tidycensus)
 library(htmltools)
-library(openxlsx)
 library(snakecase)
 library(shiny)
 library(scales)
@@ -31,32 +30,50 @@ shinyApp(ui = bootstrapPage(
   tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
   absolutePanel(top = 10, right = 10,
                 style="z-index:500;",
-                numericInput("range",
-                            h3("Property Values in 2018"), 
-                            min = min(gent$value_18),
-                            max = max(gent$value_18),
-                            value = min(gent$value_18), 
-                            step = 10),
-                numericInput("num_bc",
-                             h3("Number of Individuals with a Bachelor's Degree or Higher"),
-                             min = min(gent$bc_18),
-                             max = max(gent$bc_18),
-                             value = min(gent$bc_18),
-                             step = 10)),
+                numericInput("value_increase",
+                             h3("Percentage increase in home values"),
+                             min = min(gent$increase_value),
+                             max = max(gent$increase_value),
+                             value = min(gent$increase_value),
+                             step = 1),
+                numericInput("income_13",
+                             h3("Household income in 2013"),
+                             min = min(gent$household_income_13),
+                             max = max(gent$household_income_13),
+                             value = max(gent$household_income_13),
+                             step = 1000),
+                numericInput("gentri_3",
+                             h3("Change in bachelor degree or higher - Gent 3"),
+                             min = min(gent$gentri_3),
+                             max = max(gent$gentri_3),
+                             value = min(gent$gentri_3),
+                             step = 0.01),
+                numericInput("gentri_4",
+                             h3("Change in White population - Gent 4"),
+                             min = min(gent$gentri_4),
+                             max = max(gent$gentri_4),
+                             value = min(gent$gentri_4),
+                             step = 0.01),
+                ),
   leafletOutput("map1", width="100%",height="100%" )),
 
 server = function(input, output) {
   output$map1 <- renderLeaflet({
     mapfile <- gent %>%
-      filter(value_18 >= input$range,
-             bc_18 >= input$num_bc)
+      filter(increase_value >= input$value_increase,
+             income_13 <= input$income_13,
+             gentri_3 >= input$gentri_3,
+             gentri_4 >= input$gentri_4)
 leaflet() %>% addProviderTiles(providers$CartoDB.Positron) %>% 
   addPolygons(data=st_geometry(mapfile),
               color= "black",
               weight=1.1,
-              fillColor = ifelse(mapfile$value_18>300000,"blue","red"),
+              fillColor = ifelse(mapfile$value_13>221900,"blue","red"),
               smoothFactor = .4,
-              fillOpacity = .65)
+              fillOpacity = .65) %>%
+  addPolygons(
+    data = st_geometry(community),
+    group = "Community Areas")
   })
 })
 ```

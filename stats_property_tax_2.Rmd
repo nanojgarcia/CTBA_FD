@@ -30,30 +30,28 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 census <- readRDS("census.RDS")
-
 ```
 
 Checking summary statistics:
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(income_pc_18=agg_income_18/population_18) %>%
-  summarise(mean_income_pc_18=mean(income_pc_18,na.rm=T))
+  mutate(income_pc_18 = agg_income_18 / population_18) %>%
+  summarise(mean_income_pc_18 = mean(income_pc_18, na.rm = T))
 
 census %>%
-  summarise(mean_avg_household_size_18 = mean(avg_household_size_18,na.rm=T))
+  summarise(mean_avg_household_size_18 = mean(avg_household_size_18, na.rm = T))
 
 census %>%
-  mutate(income_household_18=(agg_income_18/population_18) * 
-           avg_household_size_18) %>%
-  summarise(median_income_household_18=median(income_household_18,na.rm=T))
+  mutate(income_household_18 = (agg_income_18 / population_18) *
+    avg_household_size_18) %>%
+  summarise(median_income_household_18 = median(income_household_18, na.rm = T))
 
 census %>%
-  summarise(median_income_18=median(income_18,na.rm=T))
+  summarise(median_income_18 = median(income_18, na.rm = T))
 
 census %>%
-  summarise(median_rent_18=median(median_rent_18,na.rm=T))
-
+  summarise(median_rent_18 = median(median_rent_18, na.rm = T))
 ```
 
 Mean income per capita for 2018 is $33,599. Median household income is \$68,000 with an average household size of 2.6. Correct if we look at https://www.census.gov/quickfacts/fact/table/chicagocityillinois/LND110210.
@@ -63,17 +61,16 @@ Summary statistics for 2013:
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
-  mutate(income_pc_13=agg_income_13/population_13) %>%
-  summarise(mean_income_pc_13=mean(income_pc_13,na.rm=T))
+  mutate(income_pc_13 = agg_income_13 / population_13) %>%
+  summarise(mean_income_pc_13 = mean(income_pc_13, na.rm = T))
 
 census %>%
-  summarise(mean_avg_household_size_13=mean(avg_household_size_13,na.rm=T))
+  summarise(mean_avg_household_size_13 = mean(avg_household_size_13, na.rm = T))
 
 census %>%
-  mutate(income_household_13=(agg_income_13/population_13) * 
-           avg_household_size_13) %>%
-  summarise(median_income_household_13=median(income_household_13,na.rm=T))
-
+  mutate(income_household_13 = (agg_income_13 / population_13) *
+    avg_household_size_13) %>%
+  summarise(median_income_household_13 = median(income_household_13, na.rm = T))
 ```
 
 Median household income is \$ 58,676.28 and per capita income mean is \$28,747.67 in 2013.
@@ -86,33 +83,31 @@ Distribution of home values in 2018:
 ```{r}
 
 census %>%
-  summarise(median_value_18=median(value_18, na.rm=T))
+  summarise(median_value_18 = median(value_18, na.rm = T))
 
 ggplot(census) +
   geom_histogram(aes(x = value_18, y = ..density..),
     binwidth = 10000,
     colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 226800, color="blue") +
+  ) +
+  geom_vline(xintercept = 236600, color = "blue") +
   ggtitle("Histogram price increase in home values")
-
 ``` 
 
 Distribution of home value increase:
 
 ```{r}
 
-census %>%
-  summarise(median_value_18=median(value_18, na.rm=T))
+# census %>%
+# summarise(median_value_increase=median(increase_value, na.rm=T))
 
 ggplot(census) +
   geom_histogram(aes(x = increase_value, y = ..density..),
     binwidth = 1,
     colour = "black", fill = "white"
   ) +
-  geom_vline(xintercept = 4.334484, color="blue") +
+  geom_vline(xintercept = 4.437273, color = "blue") +
   ggtitle("Histogram price increase home values")
-
 ``` 
 
 We will zoom in to look at the outliers:
@@ -125,27 +120,27 @@ ggplot(census) +
   ) +
   xlim(c(25, 200)) +
   ggtitle("Histogram price increase in home values")
-
 ``` 
 
 ```{r, warning=FALSE, error=FALSE}
 census_rest <- census %>%
   filter(increase_value > 0)
 
-plot(ecdf(census_rest$increase_value), 
-     xlab="Home value price increase ($)",
-     ylab="Cumulative Distribution",
-     main="Home value price increase distributions from 2013-2018")
-abline(h=0.95, col="blue")
+plot(ecdf(census_rest$increase_value),
+  xlab = "Home value price increase ($)",
+  ylab = "Cumulative Distribution",
+  main = "Home value price increase distributions from 2013-2018"
+)
+abline(h = 0.95, col = "blue")
 ```
 
 
 The cumulative distribution looks like this:
 
 ```{r, warning=FALSE, error=FALSE}
-homeincrease = census_rest$increase_value
+homeincrease <- census$increase_value
 
-quantile(homeincrease, c(.8, .85, .9, .95))
+quantile(homeincrease, c(.5, .75, .8, .85, .9, .95), na.rm = T)
 ```
 
 The last 10% of the distribution gets a 36% or more of an increase in home values. We can use this to define gentrification.
@@ -166,16 +161,14 @@ census <- census %>%
     (increase_value > 25 & increase_value <= 36) & value_18 <= 226000 ~ 0,
     increase_value <= 25 ~ 0,
     value_18 <= 180800 ~ 0
-    )
-  )
+  ))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
-  filter(gentri_1==1) %>%
+  filter(gentri_1 == 1) %>%
   count()
-
 ```
 
 This measure of gentrification reaches 76 tracts.
@@ -190,24 +183,21 @@ Gentrification isn't simply the increase in wealth for a neighborhood. We can co
 census <- census %>%
   mutate(gentri_2 = case_when(
     increase_value > 36 & household_income_13 <= 58676 ~ 1,
-    increase_value > 25 & household_income_13 <= 46900 ~1,
-    (increase_value > 25 & increase_value <= 36) & 
+    increase_value > 25 & household_income_13 <= 46900 ~ 1,
+    (increase_value > 25 & increase_value <= 36) &
       (household_income_13 > 46900 & household_income_13 < 58676) ~ 0,
     increase_value <= 25 ~ 0,
     household_income_13 > 58676 ~ 0
-    )
-  )
+  ))
 
-#I am not convinced of the value of this definition using both home value increase and level of income.
-
+# I am not convinced of the value of this definition using both home value increase and level of income.
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census %>%
-  filter(gentri_2==1) %>%
+  filter(gentri_2 == 1) %>%
   count()
-
 ```
 
 This measure of gentrification reaches 35 tracts.
@@ -216,51 +206,48 @@ This measure of gentrification reaches 35 tracts.
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(gentri_3 = (bc_18  - bc_13) / population_13)
-
+  mutate(gentri_3 = (bc_18 - bc_13) / population_13)
 ```
 
 ```{r}
 
 census %>%
-  summarise(median_gentri_3=median(gentri_3, na.rm=T))
+  summarise(median_gentri_3 = median(gentri_3, na.rm = T))
 
 ggplot(census) +
   geom_histogram(aes(x = gentri_3, y = ..density..),
     colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 0.02742509, color="blue") +
+  ) +
+  geom_vline(xintercept = 0.02742509, color = "blue") +
   ggtitle("Histogram price increase in home values")
-
 ``` 
 
 What is the 90th percentile of the gentrification's indicator:
 
 ```{r, warning=FALSE, error=FALSE}
-gentrification = census$gentri_3
+gentrification <- census$gentri_3
 
-quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
+quantile(gentrification, c(.5, .75, .8, .85, .90, .95), na.rm = T)
 ```
 
 We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
 
 ```{r, warning=FALSE, error=FALSE}
 
-#census %>%
-  #summarise(median_income_13=median(household_income_13, na.rm = T))
+# census %>%
+# summarise(median_income_13=median(household_income_13, na.rm = T))
 
 census <- census %>%
   mutate(one_gentri_3 = case_when(
-    gentri_3 >= 0.1146914 & household_income_13 < 58676 ~ 1,
+    gentri_3 >= 0.06704281 & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_3 < 0.1146914 ~ 0
-    )
-  )
+    gentri_3 < 0.06704281 ~ 0
+  ))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  filter(one_gentri_3==1) %>%
+  filter(one_gentri_3 == 1) %>%
   count()
 ```
 
@@ -273,52 +260,49 @@ Gentrification definition number 4 using racial data:
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
-  mutate(gentri_4 = (white_not_latino_18  - white_not_latino_13) / sum_13)
-
+  mutate(gentri_4 = (white_not_latino_18 - white_not_latino_13) / sum_13)
 ```
 
 
 ```{r}
 
-#census %>%
-  #summarise(median_gentri_4=median(gentri_4, na.rm=T))
+# census %>%
+# summarise(median_gentri_4=median(gentri_4, na.rm=T))
 
 ggplot(census) +
   geom_histogram(aes(x = gentri_4, y = ..density..),
     colour = "black", fill = "white"
-  )  +
-  geom_vline(xintercept = 0.002240093, color="blue") +
+  ) +
+  geom_vline(xintercept = 0.002240093, color = "blue") +
   ggtitle("Histogram price increase in home values")
-
 ``` 
 
 What is the 90th percentile of the gentrification's indicator:
 
 ```{r, warning=FALSE, error=FALSE}
-gentrification = census$gentri_4
+gentrification <- census$gentri_4
 
-quantile(gentrification, c(.8, .85, .90, .95), na.rm = T) 
+quantile(gentrification, c(.5, .75, .8, .85, .90, .95), na.rm = T)
 ```
 
 We create a dummy variable if gentrification is beyond the 90th percentile of this indicator:
 
 ```{r, warning=FALSE, error=FALSE}
 
-#census %>%
-  #summarise(median_income_13=median(household_income_13, na.rm = T))
+# census %>%
+# summarise(median_income_13=median(household_income_13, na.rm = T))
 
 census <- census %>%
   mutate(one_gentri_4 = case_when(
-    gentri_4 >= 0.09571333 & household_income_13 < 58676 ~ 1,
+    gentri_4 >= 0.038203177 & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_4 < 0.09571333 ~ 0
-    )
-  )
+    gentri_4 < 0.038203177 ~ 0
+  ))
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  filter(one_gentri_4==1) %>%
+  filter(one_gentri_4 == 1) %>%
   count()
 ```
 
@@ -329,8 +313,8 @@ How many tracts coincide between definition 1 and 2?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_1*gentri_2) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = gentri_1 * gentri_2) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
@@ -339,8 +323,8 @@ How many tracts coincide between definition 1 and 3?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_1*one_gentri_3) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = gentri_1 * one_gentri_3) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
@@ -348,8 +332,8 @@ How many tracts coincide between definition 1 and 4?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_1*one_gentri_4) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = gentri_1 * one_gentri_4) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
@@ -357,8 +341,8 @@ How many tracts coincide between definition 2 and 3?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_2*one_gentri_3) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = gentri_2 * one_gentri_3) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
@@ -366,8 +350,8 @@ How many tracts coincide between definition 2 and 4?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = gentri_2*one_gentri_4) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = gentri_2 * one_gentri_4) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
@@ -376,57 +360,112 @@ How many tracts coincide between definition 3 and 4?
 
 ```{r, warning=FALSE, error=FALSE}
 census %>%
-  mutate(common_gent = one_gentri_3*one_gentri_4) %>%
-  filter(common_gent==1) %>%
+  mutate(common_gent = one_gentri_3 * one_gentri_4) %>%
+  filter(common_gent == 1) %>%
   count()
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(common_gent_3_4 = one_gentri_3*one_gentri_4)
+  mutate(common_gent_3_4 = one_gentri_3 * one_gentri_4)
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-saveRDS(census, file = "census.RDS") 
+saveRDS(census, file = "census.RDS")
 ```
 
 
-Summary statistics for gentrified areas:
+Summary statistics for gentrified areas according to definition 3:
 
 
 ```{r, warning=FALSE, error=FALSE}
 
-census %>%
-  filter(gentri_2==1) %>%
-  summarise(mean_increase_edu = median(increase_education, na.rm = T))
+census_income <- census %>%
+  filter(household_income_13 < 58676)
 
-census %>%
-  filter(gentri_2==0) %>%
-  summarise(mean_increase_edu = median(increase_education, na.rm = T))
+aggregate(cbind(
+  y = census_income$household_income_18,
+  rent = census_income$median_rent_18,
+  black = census_income$share_black_18,
+  black_13 = census_income$share_black_13,
+  latino = census_income$share_latino_18,
+  latino_13 = census_income$share_latino_13,
+  change_p = census_income$increase_value,
+  change_y = census_income$increase_income,
+  change_rent = census_income$increase_rent,
+  rent_y_18 = census_income$median_rent_income_18,
+  rent_y_13 = census_income$median_rent_income_13
+),
+# Specify data column
+by = list(census_income$one_gentri_3), # Specify group indicator
+FUN = mean, na.rm = T
+)
 
-census %>%
-  filter(gentri_2==1) %>%
-  summarise(mean_increase_bc = median(increase_bachelor, na.rm = T))
+t.test(increase_value ~ one_gentri_3, data = census_income)
+t.test(increase_rent ~ one_gentri_3, data = census_income)
+```
 
-census %>%
-  filter(gentri_1==0) %>%
-  summarise(mean_increase_bc = median(increase_bachelor, na.rm = T))
+Summary statistics for gentrified areas according to definition 4:
 
-census %>%
-  filter(gentri_2==1) %>%
-  summarise(mean_increase_income = mean(increase_income, na.rm = T))
 
-census %>%
-  filter(gentri_2==0) %>%
-  summarise(mean_increase_income = mean(increase_income, na.rm = T))
+```{r, warning=FALSE, error=FALSE}
 
+census_income <- census %>%
+  filter(household_income_13 < 58676)
+
+aggregate(cbind(
+  y = census_income$household_income_18,
+  rent = census_income$median_rent_18,
+  black_13 = census_income$share_black_13,
+  black = census_income$share_black_18,
+  latino_13 = census_income$share_latino_13,
+  latino = census_income$share_latino_18,
+  change_p = census_income$increase_value,
+  change_y = census_income$increase_income,
+  change_rent = census_income$increase_rent,
+  rent_y_18 = census_income$median_rent_income_18,
+  rent_y_13 = census_income$median_rent_income_13
+), # Specify data column
+  by = list(census_income$one_gentri_4), # Specify group indicator
+  FUN = mean, 
+  na.rm = T
+)
+
+t.test(increase_value ~ one_gentri_4, data = census_income)
+t.test(increase_rent ~ one_gentri_4, data = census_income)
 
 ```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group <- census_income %>%
+  select(
+    increase_value, increase_rent, increase_income, share_latino_13, share_black_13,
+    share_latino_18, share_black_18, one_gentri_3
+  )
+
+census_group <- census_group[census_group$one_gentri_3 != "versicolor", ]
+
+census_group$one_gentri_3 <- factor(census_group$one_gentri_3)
+
+census_group <- na.omit(census_group, cols = "increase_value")
+
+
+P.value <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
+
+tmp <- tabular(increase_value + increase_rent + increase_income + share_latino_13
+  + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_3 * (mean + sd) +P.value, data = census_group)
+
+tmp
+
+```
+
+
 
 ```{r, warning=FALSE, error=FALSE}
 gent <- census
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-saveRDS(gent, file = "gent.RDS") 
+saveRDS(gent, file = "gent.RDS")
 ```
