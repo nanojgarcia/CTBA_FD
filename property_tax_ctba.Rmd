@@ -497,6 +497,8 @@ census <- census %>%
 
 census <- census %>%
   mutate(share_white_only_13 = white_not_latino_13 / sum_13)
+
+
 ```
 
 
@@ -520,6 +522,38 @@ census <- census %>%
 
 census <- census %>%
   mutate(increase_rent = (median_rent_18 / median_rent_13 - 1) * 100)
+
+census <- census %>%
+  mutate(increase_latino = (share_latino_18 / share_latino_13-1)*100)
+
+census <- census %>%
+  mutate(increase_black = (share_black_18 / share_black_13-1)*100)
+
+is.na(census$increase_latino) <- sapply(census$increase_latino, is.infinite)
+
+is.na(census$increase_black) <- sapply(census$increase_black, is.infinite)
+
+census$increase_black[is.nan(census$increase_black)] <- NA
+
+census$increase_latino[is.nan(census$increase_latino)] <- NA
+```
+
+Change in share black and latino:
+
+```{r, warning=FALSE, error=FALSE}
+census <- census %>%
+  mutate(increase_latino = (share_latino_18 / share_latino_13-1)*100)
+
+census <- census %>%
+  mutate(increase_black = (share_black_18 / share_black_13-1)*100)
+
+is.na(census$increase_latino) <- sapply(census$increase_latino, is.infinite)
+
+is.na(census$increase_black) <- sapply(census$increase_black, is.infinite)
+
+census$increase_black[is.nan(census$increase_black)] <- NA
+
+census$increase_latino[is.nan(census$increase_latino)] <- NA
 ```
 
 What limit should we impose on population?

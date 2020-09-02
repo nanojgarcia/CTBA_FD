@@ -310,51 +310,6 @@ census %>%
 Definition number 4 reaches 18 tracts.
 
 
-How many tracts coincide between definition 1 and 2?
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(common_gent = gentri_1 * gentri_2) %>%
-  filter(common_gent == 1) %>%
-  count()
-```
-
-
-How many tracts coincide between definition 1 and 3?
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(common_gent = gentri_1 * one_gentri_3) %>%
-  filter(common_gent == 1) %>%
-  count()
-```
-
-How many tracts coincide between definition 1 and 4?
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(common_gent = gentri_1 * one_gentri_4) %>%
-  filter(common_gent == 1) %>%
-  count()
-```
-
-How many tracts coincide between definition 2 and 3?
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(common_gent = gentri_2 * one_gentri_3) %>%
-  filter(common_gent == 1) %>%
-  count()
-```
-
-How many tracts coincide between definition 2 and 4?
-
-```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(common_gent = gentri_2 * one_gentri_4) %>%
-  filter(common_gent == 1) %>%
-  count()
-```
 
 
 How many tracts coincide between definition 3 and 4?
@@ -441,7 +396,7 @@ t.test(increase_rent ~ one_gentri_4, data = census_income)
 
 census_group <- census_income %>%
   select(
-    increase_value, increase_rent, increase_income, share_latino_13, share_black_13,
+    increase_value, increase_rent, increase_income, increase_latino, increase_black, share_latino_13, share_black_13,
     share_latino_18, share_black_18, one_gentri_3
   )
 
@@ -454,7 +409,7 @@ census_group <- na.omit(census_group, cols = "increase_value")
 
 P.value <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
-table_gent_3 <- tabular(increase_value + increase_rent + increase_income + share_latino_13
+table_gent_3 <- tabular(increase_value + increase_rent + increase_income +increase_latino + increase_black + share_latino_13
   + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_3 * (mean + sd) +P.value, data = census_group)
 
 table_gent_3

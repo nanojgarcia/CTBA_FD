@@ -387,7 +387,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(gent %>% filter(gent$one_gentri_4 == 1 & increase_value >15)),
     color = "black",
-    fillColor = "red",
+    fillColor = "blue",
     weight = 2.5,
     fillOpacity = .3,
     smoothFactor = .2,
