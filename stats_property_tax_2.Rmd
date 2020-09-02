@@ -23,6 +23,7 @@ library(tigris)
 library(reshape2)
 library(ggrepel)
 library(ggmap)
+library(tables)
 
 rm(list = ls())
 ```
@@ -453,10 +454,34 @@ census_group <- na.omit(census_group, cols = "increase_value")
 
 P.value <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
-tmp <- tabular(increase_value + increase_rent + increase_income + share_latino_13
+table_gent_3 <- tabular(increase_value + increase_rent + increase_income + share_latino_13
   + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_3 * (mean + sd) +P.value, data = census_group)
 
-tmp
+table_gent_3
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group <- census_income %>%
+  select(
+    increase_value, increase_rent, increase_income, share_latino_13, share_black_13,
+    share_latino_18, share_black_18, one_gentri_4
+  )
+
+census_group <- census_group[census_group$one_gentri_4 != "versicolor", ]
+
+census_group$one_gentri_4 <- factor(census_group$one_gentri_4)
+
+census_group <- na.omit(census_group, cols = "increase_value")
+
+
+P.value <- function(x) t.test(x ~ census_group$one_gentri_4)$p.value
+
+table_gent_4 <- tabular(increase_value + increase_rent + increase_income + share_latino_13
+  + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_4 * (mean + sd) +P.value, data = census_group)
+
+table_gent_4
 
 ```
 
