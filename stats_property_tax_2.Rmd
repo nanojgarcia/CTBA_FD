@@ -207,7 +207,8 @@ This measure of gentrification reaches 35 tracts.
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(gentri_3 = (bc_18 - bc_13) / population_13)
+  mutate(gentri_3 = (bc_18 - bc_13) / population_13) 
+  #change in bachelor degree or higher normalizing by population in 2013
 ```
 
 ```{r}
@@ -223,7 +224,7 @@ ggplot(census) +
   ggtitle("Histogram price increase in home values")
 ``` 
 
-What is the 90th percentile of the gentrification's indicator:
+What is the th percentile of the gentrification's indicator:
 
 ```{r, warning=FALSE, error=FALSE}
 gentrification <- census$gentri_3
@@ -240,9 +241,9 @@ We create a dummy variable if gentrification is beyond the 90th percentile of th
 
 census <- census %>%
   mutate(one_gentri_3 = case_when(
-    gentri_3 >= 0.06704281 & household_income_13 < 58676 ~ 1,
+    gentri_3 >= 0.06704281  & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_3 < 0.06704281 ~ 0
+    gentri_3 < 0.06704281  ~ 0
   ))
 ```
 
@@ -261,7 +262,8 @@ Gentrification definition number 4 using racial data:
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
-  mutate(gentri_4 = (white_not_latino_18 - white_not_latino_13) / sum_13)
+  mutate(gentri_4 = (white_not_latino_18 - white_not_latino_13) / sum_13) 
+#change in white not latino population normalizing by population in 2013
 ```
 
 
@@ -278,7 +280,7 @@ ggplot(census) +
   ggtitle("Histogram price increase in home values")
 ``` 
 
-What is the 90th percentile of the gentrification's indicator:
+What is the th percentile of the gentrification's indicator:
 
 ```{r, warning=FALSE, error=FALSE}
 gentrification <- census$gentri_4
@@ -308,8 +310,6 @@ census %>%
 ```
 
 Definition number 4 reaches 18 tracts.
-
-
 
 
 How many tracts coincide between definition 3 and 4?
@@ -363,24 +363,16 @@ t.test(increase_rent ~ one_gentri_3, data = census_income)
 
 Summary statistics for gentrified areas according to definition 4:
 
-
 ```{r, warning=FALSE, error=FALSE}
 
 census_income <- census %>%
   filter(household_income_13 < 58676)
 
-aggregate(cbind(
-  y = census_income$household_income_18,
-  rent = census_income$median_rent_18,
-  black_13 = census_income$share_black_13,
-  black = census_income$share_black_18,
-  latino_13 = census_income$share_latino_13,
-  latino = census_income$share_latino_18,
+aggregate(cbind(change_latino = census_income$increase_latino,
+  change_black = census_income$increase_black,
   change_p = census_income$increase_value,
   change_y = census_income$increase_income,
-  change_rent = census_income$increase_rent,
-  rent_y_18 = census_income$median_rent_income_18,
-  rent_y_13 = census_income$median_rent_income_13
+  change_rent = census_income$increase_rent
 ), # Specify data column
   by = list(census_income$one_gentri_4), # Specify group indicator
   FUN = mean, 
@@ -395,48 +387,68 @@ t.test(increase_rent ~ one_gentri_4, data = census_income)
 ```{r, warning=FALSE, error=FALSE}
 
 census_group <- census_income %>%
-  select(
-    increase_value, increase_rent, increase_income, increase_latino, increase_black, share_latino_13, share_black_13,
-    share_latino_18, share_black_18, one_gentri_3
+  select(increase_value, 
+         increase_rent, 
+         increase_income,
+         increase_income_pc,
+         increase_share_latino, 
+         increase_share_black,
+         one_gentri_3
   )
 
 census_group <- census_group[census_group$one_gentri_3 != "versicolor", ]
 
 census_group$one_gentri_3 <- factor(census_group$one_gentri_3)
 
-census_group <- na.omit(census_group, cols = "increase_value")
+Mean <- function(x) base::mean(x, na.rm=TRUE)
+
+Median <- function(x) {
+  n <- length(x[!is.na(x)])
+  s <- sort(x[!is.na(x)])
+  ifelse(n%%2==1,s[(n+1)/2],mean(s[n/2+0:1]))
+}
+
+std <- function(x) {
+  n <- length(x[!is.na(x)])
+  m <- var(x, na.rm = T)
+  sqrt((m / (n - 1)))
+}
+
+mean.test <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
 
-P.value <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
-
-table_gent_3 <- tabular(increase_value + increase_rent + increase_income +increase_latino + increase_black + share_latino_13
-  + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_3 * (mean + sd) +P.value, data = census_group)
+table_gent_3 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black ~ one_gentri_3 * (Median + Mean + std) + mean.test, data = census_group)
 
 table_gent_3
+
+toLatex(table_gent_3, digits =3)
+
 
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-
 census_group <- census_income %>%
-  select(
-    increase_value, increase_rent, increase_income, share_latino_13, share_black_13,
-    share_latino_18, share_black_18, one_gentri_4
+  select(increase_value, 
+         increase_rent, 
+         increase_income,
+         increase_income_pc,
+         increase_share_latino, 
+         increase_share_black,
+         one_gentri_4
   )
 
 census_group <- census_group[census_group$one_gentri_4 != "versicolor", ]
 
 census_group$one_gentri_4 <- factor(census_group$one_gentri_4)
 
-census_group <- na.omit(census_group, cols = "increase_value")
+mean.test <- function(x) t.test(x ~ census_group$one_gentri_4)$p.value
 
 
-P.value <- function(x) t.test(x ~ census_group$one_gentri_4)$p.value
-
-table_gent_4 <- tabular(increase_value + increase_rent + increase_income + share_latino_13
-  + share_latino_18 + share_black_13  + share_black_18 ~ one_gentri_4 * (mean + sd) +P.value, data = census_group)
+table_gent_4 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black ~ one_gentri_4 * (Median + Mean + std) + mean.test, data = census_group)
 
 table_gent_4
+
+toLatex(table_gent_4, digits =3)
 
 ```
 

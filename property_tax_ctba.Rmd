@@ -188,16 +188,16 @@ builtdata <- builtdataindi %>%
 
 builtdata <- builtdata %>%
   rename(
-    built_14_18 = B25034_002,
-    built_10_13_18 = B25034_003,
-    built_00_09_18 = B25034_004,
-    built_90_99_18 = B25034_005,
-    built_80_89_18 = B25034_006,
-    built_70_79_18 = B25034_007,
-    built_60_69_18 = B25034_008,
-    built_50_59_18 = B25034_009,
-    built_40_49_18 = B25034_010,
-    built_39_18 = B25034_011
+    built_14_18 = B25034_002, #structure built from 2014 to 2018
+    built_10_13_18 = B25034_003, #structure built from 2010 to 2012
+    built_00_09_18 = B25034_004, #structure built from 2000 to 2009
+    built_90_99_18 = B25034_005, #structure built from 1990 to 1999
+    built_80_89_18 = B25034_006, #structure built from 1980 to 1989
+    built_70_79_18 = B25034_007, #structure built from 1970 to 1979
+    built_60_69_18 = B25034_008, #structure built from 1960 to 1969
+    built_50_59_18 = B25034_009, #structure built from 1950 to 1959
+    built_40_49_18 = B25034_010, #structure built from 1940 to 1949
+    built_39_18 = B25034_011 #structure built 1939 or before
   )
 ```
 
@@ -206,7 +206,6 @@ We will join both databases for 2018:
 ```{r, warning=FALSE, error=FALSE}
 
 builtdata$geometry <- NULL
-
 
 census_data_18 <- left_join(census_data_18, builtdata, by = c("NAME", "GEOID"))
 ```
@@ -379,7 +378,6 @@ We will join both databases for 2018:
 
 builtdata$geometry <- NULL
 
-
 census_data_13 <- left_join(census_data_13, builtdata, by = c("NAME", "GEOID"))
 ```
 
@@ -473,88 +471,44 @@ Share in race and hispanic population
 
 ```{r, warning=FALSE, error=FALSE}
 
-
 census <- census %>%
-  mutate(share_white_18 = white_18 / sum_18)
-
-census <- census %>%
-  mutate(share_black_18 = black_18 / sum_18)
-
-census <- census %>%
-  mutate(share_latino_18 = latino_18 / sum_18)
-
-census <- census %>%
-  mutate(share_white_only_18 = white_not_latino_18 / sum_18)
-
-census <- census %>%
-  mutate(share_white_13 = white_13 / sum_13)
-
-census <- census %>%
-  mutate(share_black_13 = black_13 / sum_13)
-
-census <- census %>%
-  mutate(share_latino_13 = latino_13 / sum_13)
-
-census <- census %>%
-  mutate(share_white_only_13 = white_not_latino_13 / sum_13)
-
+  mutate(share_white_18 = white_18 / sum_18,  #share of white people 2018
+         share_black_18 = black_18 / sum_18, #share of black people 2018
+         share_latino_18 = latino_18 / sum_18, #share of latino people 2018
+         share_white_only_18 = white_not_latino_18 / sum_18,  #share of white not latino people 2018
+         share_white_13 = white_13 / sum_13, #share of white people 2013
+         share_black_13 = black_13 / sum_13, #share of black people 2013
+         share_latino_13 = latino_13 / sum_13, #share of latino people 2013
+         share_white_only_13 = white_not_latino_13 / sum_13 #share of white not latino people 2013
+         )
 
 ```
-
-
 
 Outcome changes between 2018 and 2013:
 
 ```{r, warning=FALSE, error=FALSE}
 
-
 census <- census %>%
-  mutate(increase_value = (value_18 / value_13 - 1) * 100)
+  mutate(increase_value = (value_18 / value_13 - 1) * 100,
+         increase_income = (household_income_18 / household_income_13 - 1) * 100,
+         increase_income_pc = (income_pc_18 / income_pc_13 - 1) * 100,
+         increase_pop = (population_18 / population_13 - 1) * 100,
+         increase_rent = (median_rent_18 / median_rent_13 - 1) * 100,
+         increase_share_latino = share_latino_18 / share_latino_13,
+         increase_share_black = share_black_18 / share_black_13
+         )
 
-census <- census %>%
-  mutate(increase_income = (household_income_18 / household_income_13 - 1) * 100)
+is.na(census$increase_share_latino) <- sapply(census$increase_share_latino, is.infinite) #changing the infinite to NAs
 
-census <- census %>%
-  mutate(increase_income_pc = (income_pc_18 / income_pc_13 - 1) * 100)
+is.na(census$increase_share_black) <- 
+  sapply(census$increase_share_black, is.infinite)  #changing the infinite to NAs
 
-census <- census %>%
-  mutate(increase_pop = (population_18 / population_13 - 1) * 100)
+census$increase_share_black[is.nan(census$increase_share_black)] <- NA #changing the NaN to NA
 
-census <- census %>%
-  mutate(increase_rent = (median_rent_18 / median_rent_13 - 1) * 100)
+census$increase_share_latino[is.nan(census$increase_share_latino)] <- NA
 
-census <- census %>%
-  mutate(increase_latino = (share_latino_18 / share_latino_13-1)*100)
-
-census <- census %>%
-  mutate(increase_black = (share_black_18 / share_black_13-1)*100)
-
-is.na(census$increase_latino) <- sapply(census$increase_latino, is.infinite)
-
-is.na(census$increase_black) <- sapply(census$increase_black, is.infinite)
-
-census$increase_black[is.nan(census$increase_black)] <- NA
-
-census$increase_latino[is.nan(census$increase_latino)] <- NA
 ```
 
-Change in share black and latino:
-
-```{r, warning=FALSE, error=FALSE}
-census <- census %>%
-  mutate(increase_latino = (share_latino_18 / share_latino_13-1)*100)
-
-census <- census %>%
-  mutate(increase_black = (share_black_18 / share_black_13-1)*100)
-
-is.na(census$increase_latino) <- sapply(census$increase_latino, is.infinite)
-
-is.na(census$increase_black) <- sapply(census$increase_black, is.infinite)
-
-census$increase_black[is.nan(census$increase_black)] <- NA
-
-census$increase_latino[is.nan(census$increase_latino)] <- NA
-```
 
 What limit should we impose on population?
 
