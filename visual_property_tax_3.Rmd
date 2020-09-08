@@ -24,6 +24,7 @@ library(reshape2)
 library(ggrepel)
 library(ggmap)
 library(snakecase)
+library(scales)
 
 rm(list = ls())
 ```
@@ -86,24 +87,36 @@ tract_l_options <- labelOptions(
 tract_labels <- sprintf(
   paste0(
     "<strong>Name: </strong>%s<br/>",
-    "<strong>Median Income 2013: </strong>%g<br/>",
-    "<strong>Median Income 2018: </strong>%g<br/>",
-    "<strong>Change in Median Income: </strong>%g%%<br/>",
-    "<strong>Median Housing Value 2013: </strong>%g<br/>",
-    "<strong>Median Housing Value 2013: </strong>%g<br/>",
-    "<strong>Change in Median Housing Value: </strong>%g%%<br/>",
-    "<strong>Race in 2013</strong><br/><strong>White: </strong>%g%%,<br/><strong>Black: </strong>%g%%<br/><strong>Latino: </strong>%g%%"
+    "<strong>2013 Data:</strong><br/>
+    <strong>Population: </strong>%g<br/>",
+    "<strong>Median Household Income: </strong>%s<br/>",
+    "<strong>Median Housing Value: </strong>%s<br/>",
+    "<strong>Percentage of Population With A Bachelor's Degree or Higher: </strong>%g%%<br/>",
+    "<strong>Racial Demographics</strong><br/><strong>White: </strong>%g%%<br/><strong>Black: </strong>%g%%<br/><strong>Latino: </strong>%g%%<br/>",
+    "<br/> <strong>2018 Data:</strong><br/>
+    <strong>Population: </strong>%g<br/>",
+    "<strong>Median Household Income: </strong>%s<br/>",
+    "<strong>Median Housing Value: </strong>%s<br/>",
+    "<strong>Percentage of Population With A Bachelor's Degree or Higher: </strong>%g%%<br/>",
+    "<strong>Racial Demographics</strong><br/><strong>White: </strong>%g%%<br/><strong>Black: </strong>%g%%<br/><strong>Latino: </strong>%g%%<br/>",
+    "<br> <strong>Changes:</strong><br/><strong>Median Household Income: </strong>%g%%"
   ),
   gent$NAME,
-  gent$household_income_13,
-  gent$household_income_18,
-  round(gent$increase_income,2),
-  gent$value_13,
-  gent$value_18,
-  round(gent$increase_value,2),
-  gent$share_white_13*100,
-  gent$share_black_13*100,
-  gent$share_latino_13*100
+  gent$population_13,
+  dollar(gent$income_13),
+  dollar(gent$value_13),
+  round((gent$bc_13/gent$population_13)*100,2),
+  round((gent$share_white_only_13)*100,2),
+  round((gent$share_black_not_latino_13)*100,2),
+  round((gent$share_latino_13)*100,2),
+  gent$population_18,
+  dollar(gent$income_18),
+  dollar(gent$value_18),
+  round((gent$bc_18/gent$population_18)*100,2),
+  round((gent$share_white_only_18)*100,2),
+  round((gent$share_black_not_latino_18)*100,2),
+  round((gent$share_latino_18)*100,2),
+  round((gent$increase_income)*100,2)
 ) %>%
   lapply(HTML)
 ```
@@ -183,10 +196,9 @@ Visualizations begin
 color_200k <- colorNumeric(
   palette = c("red","white","green"),
   domain = c(-max(gent$increase_value,na.rm = T),max(gent$increase_value,na.rm = T)))
-)
 
 
-c(-max(gent$increase_value),max(gent$increase_value))
+c(-max(gent$increase_value, na.rm = T),max(gent$increase_value, na.rm = T))
 ```
 
 Map #3:
@@ -231,6 +243,9 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   )
 ```
 
+Change in percentage of population with a bachelor's degree is likely correlated to increases in median household income. Is change in degree also correlated with the growth in housing value?
+
+What makes up the increase income variable?
 
 Continuous third definition of gentrification: 
 
