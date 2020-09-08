@@ -378,7 +378,8 @@ mean.test <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
 table_gent_3 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black_not_latino ~ one_gentri_3 * (Median + Mean + std) + mean.test, data = census_group)
 
-toLatex(table_gent_3, digits =3)
+toLatex(table_gent_3, digits = 2
+        )
 
 
 ```
