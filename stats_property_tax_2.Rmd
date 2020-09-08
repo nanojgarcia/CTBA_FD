@@ -331,60 +331,19 @@ saveRDS(census, file = "census.RDS")
 ```
 
 
+
+
 Summary statistics for gentrified areas according to definition 3:
 
 
 ```{r, warning=FALSE, error=FALSE}
 
-census_income <- census %>%
-  filter(household_income_13 < 58676)
-
-aggregate(cbind(
-  y = census_income$household_income_18,
-  rent = census_income$median_rent_18,
-  black = census_income$share_black_18,
-  black_13 = census_income$share_black_13,
-  latino = census_income$share_latino_18,
-  latino_13 = census_income$share_latino_13,
-  change_p = census_income$increase_value,
-  change_y = census_income$increase_income,
-  change_rent = census_income$increase_rent,
-  rent_y_18 = census_income$median_rent_income_18,
-  rent_y_13 = census_income$median_rent_income_13
-),
-# Specify data column
-by = list(census_income$one_gentri_3), # Specify group indicator
-FUN = mean, na.rm = T
-)
-
-t.test(increase_value ~ one_gentri_3, data = census_income)
-t.test(increase_rent ~ one_gentri_3, data = census_income)
-```
-
-Summary statistics for gentrified areas according to definition 4:
-
-```{r, warning=FALSE, error=FALSE}
+#census %>%
+  #summarise(median=median(household_income_13, na.rm=T))
 
 census_income <- census %>%
-  filter(household_income_13 < 58676)
+  filter(household_income_13<58676.28)
 
-aggregate(cbind(change_latino = census_income$increase_latino,
-  change_black = census_income$increase_black,
-  change_p = census_income$increase_value,
-  change_y = census_income$increase_income,
-  change_rent = census_income$increase_rent
-), # Specify data column
-  by = list(census_income$one_gentri_4), # Specify group indicator
-  FUN = mean, 
-  na.rm = T
-)
-
-t.test(increase_value ~ one_gentri_4, data = census_income)
-t.test(increase_rent ~ one_gentri_4, data = census_income)
-
-```
-
-```{r, warning=FALSE, error=FALSE}
 
 census_group <- census_income %>%
   select(increase_value, 
@@ -392,7 +351,7 @@ census_group <- census_income %>%
          increase_income,
          increase_income_pc,
          increase_share_latino, 
-         increase_share_black,
+         increase_share_black_not_latino,
          one_gentri_3
   )
 
@@ -417,9 +376,7 @@ std <- function(x) {
 mean.test <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
 
-table_gent_3 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black ~ one_gentri_3 * (Median + Mean + std) + mean.test, data = census_group)
-
-table_gent_3
+table_gent_3 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black_not_latino ~ one_gentri_3 * (Median + Mean + std) + mean.test, data = census_group)
 
 toLatex(table_gent_3, digits =3)
 
@@ -433,7 +390,7 @@ census_group <- census_income %>%
          increase_income,
          increase_income_pc,
          increase_share_latino, 
-         increase_share_black,
+         increase_share_black_not_latino,
          one_gentri_4
   )
 
@@ -444,9 +401,7 @@ census_group$one_gentri_4 <- factor(census_group$one_gentri_4)
 mean.test <- function(x) t.test(x ~ census_group$one_gentri_4)$p.value
 
 
-table_gent_4 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black ~ one_gentri_4 * (Median + Mean + std) + mean.test, data = census_group)
-
-table_gent_4
+table_gent_4 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black_not_latino ~ one_gentri_4 * (Median + Mean + std) + mean.test, data = census_group)
 
 toLatex(table_gent_4, digits =3)
 

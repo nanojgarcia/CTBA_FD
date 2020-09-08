@@ -475,11 +475,14 @@ census <- census %>%
   mutate(share_white_18 = white_18 / sum_18,  #share of white people 2018
          share_black_18 = black_18 / sum_18, #share of black people 2018
          share_latino_18 = latino_18 / sum_18, #share of latino people 2018
-         share_white_only_18 = white_not_latino_18 / sum_18,  #share of white not latino people 2018
+         share_white_only_18 = 
+           white_not_latino_18 / sum_18, #share of white not latino people 2018
+         share_black_not_latino_18 = black_not_latino_18/sum_18,  
          share_white_13 = white_13 / sum_13, #share of white people 2013
          share_black_13 = black_13 / sum_13, #share of black people 2013
          share_latino_13 = latino_13 / sum_13, #share of latino people 2013
-         share_white_only_13 = white_not_latino_13 / sum_13 #share of white not latino people 2013
+         share_white_only_13 = white_not_latino_13 / sum_13, #share of white not latino people 2013
+         share_black_not_latino_13 = black_not_latino_13/sum_13
          )
 
 ```
@@ -489,21 +492,22 @@ Outcome changes between 2018 and 2013:
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
-  mutate(increase_value = (value_18 / value_13 - 1) * 100,
-         increase_income = (household_income_18 / household_income_13 - 1) * 100,
-         increase_income_pc = (income_pc_18 / income_pc_13 - 1) * 100,
-         increase_pop = (population_18 / population_13 - 1) * 100,
-         increase_rent = (median_rent_18 / median_rent_13 - 1) * 100,
-         increase_share_latino = share_latino_18 / share_latino_13,
-         increase_share_black = share_black_18 / share_black_13
+  mutate(increase_value = (value_18 / value_13 - 1) ,
+         increase_income = (household_income_18 / household_income_13 - 1),
+         increase_income_pc = (income_pc_18 / income_pc_13 - 1),
+         increase_pop = (population_18 / population_13 - 1),
+         increase_rent = (median_rent_18 / median_rent_13 - 1),
+         increase_share_latino = (share_latino_18 / share_latino_13-1),
+         increase_share_black_not_latino = 
+           (share_black_not_latino_18 / share_black_not_latino_13-1)
          )
 
 is.na(census$increase_share_latino) <- sapply(census$increase_share_latino, is.infinite) #changing the infinite to NAs
 
-is.na(census$increase_share_black) <- 
-  sapply(census$increase_share_black, is.infinite)  #changing the infinite to NAs
+is.na(census$increase_share_black_not_latino) <- 
+  sapply(census$increase_share_black_not_latino, is.infinite)  #changing the infinite to NAs
 
-census$increase_share_black[is.nan(census$increase_share_black)] <- NA #changing the NaN to NA
+census$increase_share_black_not_latino[is.nan(census$increase_share_black_not_latino)] <- NA #changing the NaN to NA
 
 census$increase_share_latino[is.nan(census$increase_share_latino)] <- NA
 
