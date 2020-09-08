@@ -45,8 +45,7 @@ census_data <- get_acs(
     median_rent_18 = "B25064_001",
     median_rent_income_18 = "B25071_001", # median rent over income
     median_year_built = "B25035_001",
-    year_built_18 = "B25034_001",
-    built_2014_18 = "B25034_002"
+    year_built_18 = "B25034_001"
   ),
   state = "IL",
   county = "Cook County",
@@ -227,7 +226,9 @@ census_data <- get_acs(
     phd_13 = "B15003_025",
     value_13 = "B25077_001",
     median_rent_13 = "B25064_001",
-    median_rent_income_13 = "B25071_001"
+    median_rent_income_13 = "B25071_001",
+    median_year_built_13 = "B25035_001",
+    year_built_13 = "B25034_001"
   ),
   state = "IL",
   county = "Cook County",
