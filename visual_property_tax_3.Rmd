@@ -32,6 +32,8 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 gent <- readRDS("gent.RDS")
+
+gent <- gent %>% filter(increase_value>.15, one_gentri_3==1)
 ```
 
 Neighborhood Polygons:
@@ -246,6 +248,8 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 Change in percentage of population with a bachelor's degree is likely correlated to increases in median household income. Is change in degree also correlated with the growth in housing value?
 
 What makes up the increase income variable?
+
+Add CTA map overlay to viz.
 
 Continuous third definition of gentrification: 
 
