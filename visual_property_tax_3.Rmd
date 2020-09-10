@@ -32,8 +32,6 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 gent <- readRDS("gent.RDS")
-
-gent <- gent %>% filter(increase_value>.15, one_gentri_1==1)
 ```
 
 Neighborhood Polygons:
@@ -86,7 +84,7 @@ tract_l_options <- labelOptions(
   direction = "auto"
 )
 
-tract_labels <- sprintf(
+gent$tract_labels <- sprintf(
   paste0(
     "<strong>Name: </strong>%s<br/>",
     "<strong>2013 Data:</strong><br/>
@@ -199,15 +197,13 @@ color_200k <- colorNumeric(
   palette = c("red","white","green"),
   domain = c(-max(gent$increase_value,na.rm = T),max(gent$increase_value,na.rm = T)))
 
-
-c(-max(gent$increase_value, na.rm = T),max(gent$increase_value, na.rm = T))
+gent$color_inc_value <- color_200k(gent$increase_value)
 ```
 
 Map #3:
 
 
 ```{r}
-
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
   addPolygons(
@@ -224,8 +220,8 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(gent),
     color = "black",
-    fillColor = color_200k(gent$increase_value),
-    popup = tract_labels,
+    fillColor = gent$color_inc_value,
+    popup = gent$tract_labels,
     popupOptions = tract_l_options,
     highlightOptions = tract_h_lights,
     weight = 1,
