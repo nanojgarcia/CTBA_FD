@@ -104,10 +104,10 @@ Distribution of home value increase:
 
 ggplot(census) +
   geom_histogram(aes(x = increase_value, y = ..density..),
-    binwidth = 1,
+    binwidth = 0.01,
     colour = "black", fill = "white"
   ) +
-  geom_vline(xintercept = 4.437273, color = "blue") +
+  geom_vline(xintercept = 0.04437273, color = "blue") +
   ggtitle("Histogram price increase home values")
 ``` 
 
@@ -116,10 +116,10 @@ We will zoom in to look at the outliers:
 ```{r}
 ggplot(census) +
   geom_histogram(aes(x = increase_value, y = ..density..),
-    binwidth = 1,
+    binwidth = 0.01,
     colour = "black", fill = "white"
   ) +
-  xlim(c(25, 200)) +
+  xlim(c(0.25, 2)) +
   ggtitle("Histogram price increase in home values")
 ``` 
 

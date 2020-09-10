@@ -33,7 +33,7 @@ rm(list = ls())
 
 gent <- readRDS("gent.RDS")
 
-gent <- gent %>% filter(increase_value>.15, one_gentri_3==1)
+gent <- gent %>% filter(increase_value>.15, one_gentri_1==1)
 ```
 
 Neighborhood Polygons:
@@ -302,7 +302,7 @@ These are the tracts that would be gentrified according to definition 3:
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_1 == 1)),
     color = "black",
     fillColor = color_200k(gent$gentri_3),
     weight = 2.5,
@@ -333,7 +333,7 @@ These are the tracts that are gentrified according to definition 4:
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_4 == 1)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1)),
     color = "black",
     fillColor = color_200k(gent$increase_income),
     weight = 2.5,
@@ -357,14 +357,14 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   )
 ```
 
-Gentrified tracts according to definitions 3 (blue) and 4 (black) with tracts that coincide in red: 
+Gentrified tracts according to definitions 1 (blue) and 3 (black) with tracts that coincide in red: 
 
 ```{r}
 
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_1 == 1)),
     color = "blue",
     fillColor = "blue",
     weight = 2.5,
@@ -376,7 +376,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     group = "Gentrification By Education"
   ) %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_4 == 1)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1)),
     color = "black",
     fillColor = color_200k(gent$increase_income),
     weight = 2.5,
@@ -388,7 +388,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     group = "Gentrification By Education"
   ) %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$common_gent_3_4 == 1)),
+    data = st_geometry(gent %>% filter(gent$common_gent_1_3 == 1)),
     color = "black",
     fillColor = "red",
     weight = 2.5,
@@ -417,7 +417,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addTiles() %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1 & increase_value >15)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_1 == 1 & increase_value >15)),
     color = "black",
     fillColor = "red",
     weight = 2.5,
@@ -429,7 +429,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     group = "Gentrification By Education"
   )  %>%
   addPolygons(
-    data = st_geometry(gent %>% filter(gent$one_gentri_4 == 1 & increase_value >15)),
+    data = st_geometry(gent %>% filter(gent$one_gentri_3 == 1 & increase_value >15)),
     color = "black",
     fillColor = "blue",
     weight = 2.5,
