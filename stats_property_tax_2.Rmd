@@ -24,6 +24,8 @@ library(reshape2)
 library(ggrepel)
 library(ggmap)
 library(tables)
+library(qwraps2)
+
 
 rm(list = ls())
 ```
@@ -33,46 +35,72 @@ rm(list = ls())
 census <- readRDS("census.RDS")
 ```
 
-Checking summary statistics:
+Summary statistics overall in levels:
 
 ```{r, warning=FALSE, error=FALSE}
-census %>%
-  mutate(income_pc_18 = agg_income_18 / population_18) %>%
-  summarise(mean_income_pc_18 = mean(income_pc_18, na.rm = T))
 
-census %>%
-  summarise(mean_avg_household_size_18 = mean(avg_household_size_18, na.rm = T))
+census_group_18 <- census %>%
+  select(household_income_18, 
+         income_pc_18, 
+         value_18,
+         median_rent_18,
+         share_white_only_18, 
+         share_black_not_latino_18,
+         share_latino_18
+  )
 
-census %>%
-  mutate(income_household_18 = (agg_income_18 / population_18) *
-    avg_household_size_18) %>%
-  summarise(median_income_household_18 = median(income_household_18, na.rm = T))
+Mean <- function(x) base::mean(x, na.rm=TRUE)
 
-census %>%
-  summarise(median_income_18 = median(income_18, na.rm = T))
+Median <- function(x) {
+  n <- length(x[!is.na(x)])
+  s <- sort(x[!is.na(x)])
+  ifelse(n%%2==1,s[(n+1)/2],mean(s[n/2+0:1]))
+}
 
-census %>%
-  summarise(median_rent_18 = median(median_rent_18, na.rm = T))
+std <- function(x) {
+  n <- length(x[!is.na(x)])
+  m <- var(x, na.rm = T)
+  sqrt((m / (n - 1)))
+}
+
+table_levels_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ (n=1)+ Format(digits=2)* (Median + Mean + std), data = census_group_18)
+
+toLatex(table_levels_18, digits = 2
+        )
+table_levels_18
+
 ```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_13 <- census %>%
+  select(household_income_13, 
+         income_pc_13, 
+         value_13,
+         median_rent_13,
+         share_white_only_13, 
+         share_black_not_latino_13,
+         share_latino_13
+  )
+
+table_levels_13 <- tabular(household_income_13 + income_pc_13 + value_13 + median_rent_13 + share_white_only_13 + share_black_not_latino_13 + share_latino_13 ~ (n=1)+ Format(digits=2)* (Median + Mean + std), data = census_group_13)
+
+toLatex(table_levels_13, digits = 2
+        )
+table_levels_13
+
+tab <- rbind(table_levels_13,table_levels_18)
+
+tab
+```
+
+
 
 Mean income per capita for 2018 is $33,599. Median household income is \$68,000 with an average household size of 2.6. Correct if we look at https://www.census.gov/quickfacts/fact/table/chicagocityillinois/LND110210.
 
 Summary statistics for 2013:
 
-```{r, warning=FALSE, error=FALSE}
 
-census %>%
-  mutate(income_pc_13 = agg_income_13 / population_13) %>%
-  summarise(mean_income_pc_13 = mean(income_pc_13, na.rm = T))
-
-census %>%
-  summarise(mean_avg_household_size_13 = mean(avg_household_size_13, na.rm = T))
-
-census %>%
-  mutate(income_household_13 = (agg_income_13 / population_13) *
-    avg_household_size_13) %>%
-  summarise(median_income_household_13 = median(income_household_13, na.rm = T))
-```
 
 Median household income is \$ 58,676.28 and per capita income mean is \$28,747.67 in 2013.
 
@@ -342,6 +370,271 @@ saveRDS(census, file = "census.RDS")
 ```
 
 Summary statistics for gentrified areas according to definition 1:
+
+
+#Levels
+
+```{r, warning=FALSE, error=FALSE}
+
+census_income <- census %>%
+  filter(household_income_13<58676.28)
+
+census_group_18 <- census_income %>%
+  select(household_income_18, 
+         income_pc_18, 
+         value_18,
+         median_rent_18,
+         share_white_only_18, 
+         share_black_not_latino_18,
+         share_latino_18,
+         one_gentri_1
+  )
+
+census_group_18 <- census_group_18[census_group_18$one_gentri_1 != "versicolor", ]
+
+census_group_18$one_gentri_1 <- factor(census_group_18$one_gentri_1)
+
+table_gent_1_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_1 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
+
+options("scipen"=100, "digits"=1)
+
+table_gent_1_level_18
+
+toLatex(table_gent_1_level_18)
+
+```
+
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_13 <- census_income %>%
+  select(household_income_13, 
+         income_pc_13, 
+         value_13,
+         median_rent_13,
+         share_white_only_13, 
+         share_black_not_latino_13,
+         share_latino_13,
+         one_gentri_1
+  )
+
+census_group_13 <- census_group_13[census_group_13$one_gentri_1 != "versicolor", ]
+
+census_group_13$one_gentri_1 <- factor(census_group_13$one_gentri_1)
+
+table_gent_1_level_13 <- tabular(household_income_13 + income_pc_13 + value_13 + median_rent_13 + share_white_only_13 + share_black_not_latino_13 + share_latino_13 ~ one_gentri_1 * Format(digits=1)*(Median + Mean + std), data = census_group_13)
+
+toLatex(table_gent_1_level_13, digits = 2
+        )
+table_gent_1_level_13
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_18 <- census_income %>%
+  select(household_income_18, 
+         income_pc_18, 
+         value_18,
+         median_rent_18,
+         share_white_only_18, 
+         share_black_not_latino_18,
+         share_latino_18,
+         one_gentri_2
+  )
+
+census_group_18 <- census_group_18[census_group_18$one_gentri_2 != "versicolor", ]
+
+census_group_18$one_gentri_2 <- factor(census_group_18$one_gentri_2)
+
+table_gent_2_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_2 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
+
+toLatex(table_gent_2_level_18)
+table_gent_2_level_18
+
+```
+
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_13 <- census_income %>%
+  select(household_income_13, 
+         income_pc_13, 
+         value_13,
+         median_rent_13,
+         share_white_only_13, 
+         share_black_not_latino_13,
+         share_latino_13,
+         one_gentri_2
+  )
+
+census_group_13 <- census_group_13[census_group_13$one_gentri_2 != "versicolor", ]
+
+census_group_13$one_gentri_2 <- factor(census_group_13$one_gentri_2)
+
+table_gent_2_level_13 <- tabular(household_income_13 + income_pc_13 + value_13 + median_rent_13 + share_white_only_13 + share_black_not_latino_13 + share_latino_13 ~ one_gentri_2 * Format(digits=1)*(Median + Mean + std), data = census_group_13)
+
+toLatex(table_gent_2_level_13, digits = 2
+        )
+table_gent_2_level_13
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_18 <- census_income %>%
+  select(household_income_18, 
+         income_pc_18, 
+         value_18,
+         median_rent_18,
+         share_white_only_18, 
+         share_black_not_latino_18,
+         share_latino_18,
+         one_gentri_3
+  )
+
+census_group_18 <- census_group_18[census_group_18$one_gentri_3 != "versicolor", ]
+
+census_group_18$one_gentri_3 <- factor(census_group_18$one_gentri_3)
+
+table_gent_3_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_3 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
+
+toLatex(table_gent_3_level_18, digits = 2
+        )
+table_gent_3_level_18
+
+```
+
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_13 <- census_income %>%
+  select(household_income_13, 
+         income_pc_13, 
+         value_13,
+         median_rent_13,
+         share_white_only_13, 
+         share_black_not_latino_13,
+         share_latino_13,
+         one_gentri_3
+  )
+
+census_group_13 <- census_group_13[census_group_13$one_gentri_3 != "versicolor", ]
+
+census_group_13$one_gentri_3 <- factor(census_group_13$one_gentri_3)
+
+table_gent_3_level_13 <- tabular(household_income_13 + income_pc_13 + value_13 + median_rent_13 + share_white_only_13 + share_black_not_latino_13 + share_latino_13 ~ one_gentri_3 * Format(digits=1)*(Median + Mean + std), data = census_group_13)
+
+toLatex(table_gent_3_level_13, digits = 2
+        )
+table_gent_3_level_13
+
+```
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_18 <- census_income %>%
+  select(household_income_18, 
+         income_pc_18, 
+         value_18,
+         median_rent_18,
+         share_white_only_18, 
+         share_black_not_latino_18,
+         share_latino_18,
+         one_gentri_4
+  )
+
+census_group_18 <- census_group_18[census_group_18$one_gentri_4 != "versicolor", ]
+
+census_group_18$one_gentri_4 <- factor(census_group_18$one_gentri_4)
+
+table_gent_4_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_4 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
+
+toLatex(table_gent_4_level_18, digits = 2
+        )
+table_gent_4_level_18
+
+```
+
+
+```{r, warning=FALSE, error=FALSE}
+
+census_group_13 <- census_income %>%
+  select(household_income_13, 
+         income_pc_13, 
+         value_13,
+         median_rent_13,
+         share_white_only_13, 
+         share_black_not_latino_13,
+         share_latino_13,
+         one_gentri_4
+  )
+
+census_group_13 <- census_group_13[census_group_13$one_gentri_4 != "versicolor", ]
+
+census_group_13$one_gentri_4 <- factor(census_group_13$one_gentri_4)
+
+table_gent_4_level_13 <- tabular(household_income_13 + income_pc_13 + value_13 + median_rent_13 + share_white_only_13 + share_black_not_latino_13 + share_latino_13 ~ one_gentri_4 * Format(digits=1)*(Median + Mean + std), data = census_group_13)
+
+toLatex(table_gent_4_level_13, digits = 2
+        )
+table_gent_4_level_13
+
+```
+
+
+
+
+
+
+
+```{r, warning=FALSE, error=FALSE}
+
+#census %>%
+  #summarise(median=median(household_income_13, na.rm=T))
+
+census_income <- census %>%
+  filter(household_income_13<58676.28)
+
+
+census_group <- census_income %>%
+  select(increase_value, 
+         increase_rent, 
+         increase_income,
+         increase_income_pc,
+         increase_share_latino, 
+         increase_share_black_not_latino,
+         one_gentri_1
+  )
+
+census_group <- census_group[census_group$one_gentri_1 != "versicolor", ]
+
+census_group$one_gentri_1 <- factor(census_group$one_gentri_1)
+
+Mean <- function(x) base::mean(x, na.rm=TRUE)
+
+Median <- function(x) {
+  n <- length(x[!is.na(x)])
+  s <- sort(x[!is.na(x)])
+  ifelse(n%%2==1,s[(n+1)/2],mean(s[n/2+0:1]))
+}
+
+std <- function(x) {
+  n <- length(x[!is.na(x)])
+  m <- var(x, na.rm = T)
+  sqrt((m / (n - 1)))
+}
+
+pvalue <- function(x) t.test(x ~ census_group$one_gentri_1)$p.value
+
+
+table_gent_1 <- tabular(increase_value + increase_rent + increase_income +    increase_income_pc + increase_share_latino + increase_share_black_not_latino ~ one_gentri_1 * (Median + Mean + std) + pvalue, data = census_group)
+
+toLatex(table_gent_1, digits = 2
+        )
+table_gent_1
+
+```
 
 
 ```{r, warning=FALSE, error=FALSE}
