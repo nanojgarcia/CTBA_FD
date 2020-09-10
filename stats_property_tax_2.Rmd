@@ -65,6 +65,9 @@ std <- function(x) {
 
 table_levels_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ (n=1)+ Format(digits=2)* (Median + Mean + std), data = census_group_18)
 
+
+options("scipen"=100, "digits"=1)
+
 toLatex(table_levels_18, digits = 2
         )
 table_levels_18
@@ -396,7 +399,6 @@ census_group_18$one_gentri_1 <- factor(census_group_18$one_gentri_1)
 
 table_gent_1_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_1 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
 
-options("scipen"=100, "digits"=1)
 
 table_gent_1_level_18
 
@@ -501,7 +503,7 @@ table_gent_3_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 +
 
 toLatex(table_gent_3_level_18, digits = 2
         )
-table_gent_3_level_18
+#table_gent_3_level_18
 
 ```
 
@@ -550,9 +552,9 @@ census_group_18$one_gentri_4 <- factor(census_group_18$one_gentri_4)
 
 table_gent_4_level_18 <- tabular(household_income_18 + income_pc_18 + value_18 + median_rent_18 + share_white_only_18 + share_black_not_latino_18 + share_latino_18 ~ one_gentri_4 * Format(digits=1)*(Median + Mean + std), data = census_group_18)
 
-toLatex(table_gent_4_level_18, digits = 2
+toLatex(table_gent_4_level_18
         )
-table_gent_4_level_18
+#table_gent_4_level_18
 
 ```
 
