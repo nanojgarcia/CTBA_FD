@@ -32,6 +32,9 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 gent <- readRDS("gent.RDS")
+
+gent %>% filter(income_18<=100000)
+View(gent %>% filter(income_18>100000))
 ```
 
 Neighborhood Polygons:
