@@ -32,9 +32,6 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 gent <- readRDS("gent.RDS")
-
-gent %>% filter(income_18<=100000)
-View(gent %>% filter(income_18>100000))
 ```
 
 Neighborhood Polygons:
@@ -46,6 +43,14 @@ community <- st_transform(
   community,
   4326
 )
+
+community$centroid <- st_centroid(community$geometry)
+
+coords <- do.call(rbind, st_geometry(community$centroid)) %>% 
+    as_tibble() %>% setNames(c("lon","lat"))
+
+community$lon <- coords$lon
+community$lat <- coords$lat
 ```
 
 Leaflet Options and Colors:
@@ -451,3 +456,135 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     position = "bottomright"
   )
 ```
+
+--------------------------------
+OUTPUT MAPS
+--------------------------------
+
+```{r Neighborhoods}
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 3,
+    group = "Community Areas"
+  ) #%>% 
+  addLabelOnlyMarkers(
+    lng = community$lon, lat = community$lat,
+    label = to_title_case(community$community),
+    labelOptions = labelOptions(noHide = T, textOnly = T, textsize = "10px",
+                                style = list(
+                                  "color" = "red"
+                                )))
+```
+
+```{r Neighborhoods & Tracts}
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 3,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = "gray",
+    fillOpacity = .1,
+    weight = 1
+  )
+```
+
+```{r Median Income Level 2013}
+
+median_income <- colorNumeric(
+  palette = "magma",
+  domain = gent$income_13)
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = median_income(gent$income_13),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Median Incomes in 2013",
+    pal = median_income,
+    values = gent$income_13,
+    position = "topright"
+  ) 
+```
+
+```{r Median Home Value in 2013}
+median_home_value <- colorNumeric(
+  palette = "viridis",
+  domain = gent$value_13)
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = median_home_value(gent$value_13),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Median Home Value in 2013",
+    pal = median_home_value,
+    values = gent$value_13,
+    position = "topright"
+  ) 
+```
+
+```{r Tracts Under Gentrification Definition 1}
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = ifelse(gent$one_gentri_2==1,"red",
+                       ifelse(gent$one_gentri_1==1,"blue","gray")),
+    fillOpacity = .6,
+    weight = 1
+  )
+```
+
