@@ -40,24 +40,25 @@ Summary statistics overall in levels:
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_18 <- census %>%
-  select(household_income_18, 
-         income_pc_18, 
-         value_18,
-         median_rent_18,
-         share_white_only_18, 
-         share_black_not_latino_18,
-         share_latino_18, 
-         population_18
+  select(
+    household_income_18,
+    income_pc_18,
+    value_18,
+    median_rent_18,
+    share_white_only_18,
+    share_black_not_latino_18,
+    share_latino_18,
+    population_18
   )
 
-#functions for mean, sd, min, median, max
+# functions for mean, sd, min, median, max
 
-Mean <- function(x) base::mean(x, na.rm=TRUE)
+Mean <- function(x) base::mean(x, na.rm = TRUE)
 
 Median <- function(x) {
   n <- length(x[!is.na(x)])
   s <- sort(x[!is.na(x)])
-  ifelse(n%%2==1,s[(n+1)/2],mean(s[n/2+0:1]))
+  ifelse(n %% 2 == 1, s[(n + 1) / 2], mean(s[n / 2 + 0:1]))
 }
 
 std <- function(x) {
@@ -76,32 +77,31 @@ Max <- function(x) {
 }
 
 
-table_levels_18 <- tabular(Format(digits=0)*household_income_18 +Format(digits=0)* income_pc_18 +Format(digits=0)* value_18 +Format(digits=0)* median_rent_18 + Format(digits=0)* population_18 + Format(digits=1)*share_white_only_18 + Format(digits=1)*share_black_not_latino_18 + Format(digits=1) * share_latino_18 ~ (n=1)+ Justify(c,r)* (Mean + std + Min + Median + Max ), data = census_group_18)
+table_levels_18 <- tabular(Format(digits = 0) * household_income_18 + Format(digits = 0) * income_pc_18 + Format(digits = 0) * value_18 + Format(digits = 0) * median_rent_18 + Format(digits = 0) * population_18 + Format(digits = 1) * share_white_only_18 + Format(digits = 1) * share_black_not_latino_18 + Format(digits = 1) * share_latino_18 ~ (n <- 1) + Justify(c, r) * (Mean + std + Min + Median + Max), data = census_group_18)
 
 
-options("scipen"=100, "digits"=0)
+options("scipen" = 100, "digits" = 0)
 
 toLatex(table_levels_18)
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_13 <- census %>%
-  select(household_income_13, 
-         income_pc_13, 
-         value_13,
-         median_rent_13,
-         share_white_only_13, 
-         share_black_not_latino_13,
-         share_latino_13,
-         population_13
+  select(
+    household_income_13,
+    income_pc_13,
+    value_13,
+    median_rent_13,
+    share_white_only_13,
+    share_black_not_latino_13,
+    share_latino_13,
+    population_13
   )
 
-table_levels_13 <- tabular(Format(digits=0)*household_income_13 + Format(digits=0)*income_pc_13 + Format(digits=0)*value_13 + Format(digits=0)*median_rent_13 + Format(digits=0)*population_13 + Format(digits=2)*share_white_only_13 + Format(digits=2)*share_black_not_latino_13 + Format(digits=2)*share_latino_13 ~ (n=1)+ Justify(c,r)* (Mean + std + Min + Median + Max), data = census_group_13)
+table_levels_13 <- tabular(Format(digits = 0) * household_income_13 + Format(digits = 0) * income_pc_13 + Format(digits = 0) * value_13 + Format(digits = 0) * median_rent_13 + Format(digits = 0) * population_13 + Format(digits = 2) * share_white_only_13 + Format(digits = 2) * share_black_not_latino_13 + Format(digits = 2) * share_latino_13 ~ (n <- 1) + Justify(c, r) * (Mean + std + Min + Median + Max), data = census_group_13)
 
 toLatex(table_levels_13)
-
 ```
 
 
@@ -188,14 +188,14 @@ The last 10% of the distribution gets a 36% or more of an increase in home value
 
 ```{r, warning=FALSE, error=FALSE}
 census <- census %>%
-  mutate(gentri_3 = (bc_18 - bc_13) / population_13) 
-  #change in bachelor degree or higher normalizing by population in 2013
+  mutate(gentri_3 = (bc_18 - bc_13) / population_13)
+# change in bachelor degree or higher normalizing by population in 2013
 ```
 
 ```{r}
 
-#census %>%
-  #summarise(median_gentri_3 = median(gentri_3, na.rm = T))
+# census %>%
+# summarise(median_gentri_3 = median(gentri_3, na.rm = T))
 
 ggplot(census) +
   geom_histogram(aes(x = gentri_3, y = ..density..),
@@ -224,9 +224,9 @@ We create a dummy variable if gentrification is beyond the 75th percentile of th
 
 census <- census %>%
   mutate(one_gentri_1 = case_when(
-    gentri_3 >= 0.06704281  & household_income_13 < 58676 ~ 1,
+    gentri_3 >= 0.06704281 & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_3 < 0.06704281  ~ 0
+    gentri_3 < 0.06704281 ~ 0
   ))
 ```
 
@@ -247,9 +247,9 @@ We create a dummy variable if gentrification is beyond the 90th percentile of th
 
 census <- census %>%
   mutate(one_gentri_2 = case_when(
-    gentri_3 >= 0.11469142  & household_income_13 < 58676 ~ 1,
+    gentri_3 >= 0.11469142 & household_income_13 < 58676 ~ 1,
     household_income_13 > 58676 ~ 0,
-    gentri_3 < 0.11469142  ~ 0
+    gentri_3 < 0.11469142 ~ 0
   ))
 ```
 
@@ -267,8 +267,8 @@ Gentrification definition number 4 using racial data:
 ```{r, warning=FALSE, error=FALSE}
 
 census <- census %>%
-  mutate(gentri_4 = (white_not_latino_18 - white_not_latino_13) / sum_13) 
-#change in white not latino population normalizing by population in 2013
+  mutate(gentri_4 = (white_not_latino_18 - white_not_latino_13) / sum_13)
+# change in white not latino population normalizing by population in 2013
 ```
 
 
@@ -384,159 +384,159 @@ saveRDS(census, file = "census.RDS")
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_13 <- census_income %>%
-  select(household_income_13, 
-         income_pc_13, 
-         value_13,
-         median_rent_13,
-         share_white_only_13, 
-         share_black_not_latino_13,
-         share_latino_13,
-         population_13,
-         one_gentri_1
+  select(
+    household_income_13,
+    income_pc_13,
+    value_13,
+    median_rent_13,
+    share_white_only_13,
+    share_black_not_latino_13,
+    share_latino_13,
+    population_13,
+    one_gentri_1
   )
 
 census_group_13 <- census_group_13[census_group_13$one_gentri_1 != "versicolor", ]
 
 census_group_13$one_gentri_1 <- factor(census_group_13$one_gentri_1)
 
-table_gent_1_level_13 <- tabular(Format(digits=0) * household_income_13 + Format(digits=0) * income_pc_13 + Format(digits=0) * value_13 + Format(digits=0) * median_rent_13 + Format(digits=0)*population_13 + Format(digits=2) *share_white_only_13 + Format(digits=2) * share_black_not_latino_13 + Format(digits=2) * share_latino_13 ~ one_gentri_1 * Justify(c, r)*((n=1) +Median + Mean + std), data = census_group_13)
+table_gent_1_level_13 <- tabular(Format(digits = 0) * household_income_13 + Format(digits = 0) * income_pc_13 + Format(digits = 0) * value_13 + Format(digits = 0) * median_rent_13 + Format(digits = 0) * population_13 + Format(digits = 2) * share_white_only_13 + Format(digits = 2) * share_black_not_latino_13 + Format(digits = 2) * share_latino_13 ~ one_gentri_1 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_13)
 
-toLatex(table_gent_1_level_13  )
+toLatex(table_gent_1_level_13)
 table_gent_1_level_13
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_income <- census %>%
-  filter(household_income_13<58676.28)
+  filter(household_income_13 < 58676.28)
 
 census_group_18 <- census_income %>%
-  select(household_income_18, 
-         income_pc_18, 
-         value_18,
-         median_rent_18,
-         share_white_only_18, 
-         share_black_not_latino_18,
-         share_latino_18,
-         population_18,
-         one_gentri_1
+  select(
+    household_income_18,
+    income_pc_18,
+    value_18,
+    median_rent_18,
+    share_white_only_18,
+    share_black_not_latino_18,
+    share_latino_18,
+    population_18,
+    one_gentri_1
   )
 
 census_group_18 <- census_group_18[census_group_18$one_gentri_1 != "versicolor", ]
 
 census_group_18$one_gentri_1 <- factor(census_group_18$one_gentri_1)
 
-table_gent_1_level_18 <- tabular(Format(digits=0)*household_income_18 + Format(digits=0)*income_pc_18 + Format(digits=0)*value_18 + Format(digits=0)*median_rent_18 + Format(digits=0)*population_18 + Format(digits=2)*share_white_only_18 + Format(digits=2)*share_black_not_latino_18 + Format(digits=2)*share_latino_18 ~ one_gentri_1 * Justify(c,r)*((n=1) +Median + Mean + std ), data = census_group_18)
+table_gent_1_level_18 <- tabular(Format(digits = 0) * household_income_18 + Format(digits = 0) * income_pc_18 + Format(digits = 0) * value_18 + Format(digits = 0) * median_rent_18 + Format(digits = 0) * population_18 + Format(digits = 2) * share_white_only_18 + Format(digits = 2) * share_black_not_latino_18 + Format(digits = 2) * share_latino_18 ~ one_gentri_1 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_18)
 
 
-#table_gent_1_level_18
+# table_gent_1_level_18
 
 toLatex(table_gent_1_level_18)
-
 ```
 
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_13 <- census_income %>%
-  select(household_income_13, 
-         income_pc_13, 
-         value_13,
-         median_rent_13,
-         share_white_only_13, 
-         share_black_not_latino_13,
-         share_latino_13,
-         population_13,
-         one_gentri_2
+  select(
+    household_income_13,
+    income_pc_13,
+    value_13,
+    median_rent_13,
+    share_white_only_13,
+    share_black_not_latino_13,
+    share_latino_13,
+    population_13,
+    one_gentri_2
   )
 
 census_group_13 <- census_group_13[census_group_13$one_gentri_2 != "versicolor", ]
 
 census_group_13$one_gentri_2 <- factor(census_group_13$one_gentri_2)
 
-table_gent_2_level_13 <- tabular(Format(digits=0)*household_income_13 + Format(digits=0)*income_pc_13 + Format(digits=0)*value_13 + Format(digits=0)*median_rent_13 + Format(digits=0) * population_13 + Format(digits=1)*share_white_only_13 + Format(digits=1)*share_black_not_latino_13 + Format(digits=1)*share_latino_13 ~ one_gentri_2 *Justify(c,r)*((n=1) + Median + Mean + std), data = census_group_13)
+table_gent_2_level_13 <- tabular(Format(digits = 0) * household_income_13 + Format(digits = 0) * income_pc_13 + Format(digits = 0) * value_13 + Format(digits = 0) * median_rent_13 + Format(digits = 0) * population_13 + Format(digits = 1) * share_white_only_13 + Format(digits = 1) * share_black_not_latino_13 + Format(digits = 1) * share_latino_13 ~ one_gentri_2 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_13)
 
 toLatex(table_gent_2_level_13)
 table_gent_2_level_13
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_18 <- census_income %>%
-  select(household_income_18, 
-         income_pc_18, 
-         value_18,
-         median_rent_18,
-         share_white_only_18, 
-         share_black_not_latino_18,
-         share_latino_18,
-         population_18,
-         one_gentri_2
+  select(
+    household_income_18,
+    income_pc_18,
+    value_18,
+    median_rent_18,
+    share_white_only_18,
+    share_black_not_latino_18,
+    share_latino_18,
+    population_18,
+    one_gentri_2
   )
 
 census_group_18 <- census_group_18[census_group_18$one_gentri_2 != "versicolor", ]
 
 census_group_18$one_gentri_2 <- factor(census_group_18$one_gentri_2)
 
-table_gent_2_level_18 <- tabular(Format(digits=0)*household_income_18 + Format(digits=0)*income_pc_18 + Format(digits=0)*value_18 + Format(digits=0)*median_rent_18 + Format(digits=0) * population_18 + Format(digits=1)*share_white_only_18 + Format(digits=1)*share_black_not_latino_18 + Format(digits=1)*share_latino_18 ~ one_gentri_2 * Justify(c,r)*( (n=1) + Median + Mean + std ), data = census_group_18)
+table_gent_2_level_18 <- tabular(Format(digits = 0) * household_income_18 + Format(digits = 0) * income_pc_18 + Format(digits = 0) * value_18 + Format(digits = 0) * median_rent_18 + Format(digits = 0) * population_18 + Format(digits = 1) * share_white_only_18 + Format(digits = 1) * share_black_not_latino_18 + Format(digits = 1) * share_latino_18 ~ one_gentri_2 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_18)
 
 toLatex(table_gent_2_level_18)
 
 table_gent_2_level_18
-
 ```
 
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_13 <- census_income %>%
-  select(household_income_13, 
-         income_pc_13, 
-         value_13,
-         median_rent_13,
-         share_white_only_13, 
-         share_black_not_latino_13,
-         share_latino_13,
-         population_13,
-         one_gentri_3
+  select(
+    household_income_13,
+    income_pc_13,
+    value_13,
+    median_rent_13,
+    share_white_only_13,
+    share_black_not_latino_13,
+    share_latino_13,
+    population_13,
+    one_gentri_3
   )
 
 census_group_13 <- census_group_13[census_group_13$one_gentri_3 != "versicolor", ]
 
 census_group_13$one_gentri_3 <- factor(census_group_13$one_gentri_3)
 
-table_gent_3_level_13 <- tabular(Format(digits=0)*household_income_13 + Format(digits=0)*income_pc_13 + Format(digits=0)*value_13 + Format(digits=0)*median_rent_13 + Format(digits=0) * population_13 + Format(digits=1)*share_white_only_13 + Format(digits=1)*share_black_not_latino_13 + Format(digits=1)*share_latino_13 ~ one_gentri_3 * Justify(c,r)*((n=1) + Median + Mean + std), data = census_group_13)
+table_gent_3_level_13 <- tabular(Format(digits = 0) * household_income_13 + Format(digits = 0) * income_pc_13 + Format(digits = 0) * value_13 + Format(digits = 0) * median_rent_13 + Format(digits = 0) * population_13 + Format(digits = 1) * share_white_only_13 + Format(digits = 1) * share_black_not_latino_13 + Format(digits = 1) * share_latino_13 ~ one_gentri_3 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_13)
 
 toLatex(table_gent_3_level_13)
 table_gent_3_level_13
-
 ```
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_18 <- census_income %>%
-  select(household_income_18, 
-         income_pc_18, 
-         value_18,
-         median_rent_18,
-         share_white_only_18, 
-         share_black_not_latino_18,
-         share_latino_18,
-         population_18,
-         one_gentri_3
+  select(
+    household_income_18,
+    income_pc_18,
+    value_18,
+    median_rent_18,
+    share_white_only_18,
+    share_black_not_latino_18,
+    share_latino_18,
+    population_18,
+    one_gentri_3
   )
 
 census_group_18 <- census_group_18[census_group_18$one_gentri_3 != "versicolor", ]
 
 census_group_18$one_gentri_3 <- factor(census_group_18$one_gentri_3)
 
-table_gent_3_level_18 <- tabular(Format(digits=0)*household_income_18 + Format(digits=0)*income_pc_18 + Format(digits=0)*value_18 + Format(digits=0)*median_rent_18 + Format(digits=0) * population_18 + Format(digits=1)*share_white_only_18 +Format(digits=1)* share_black_not_latino_18 + Format(digits=1)*share_latino_18 ~ one_gentri_3 * Justify(c,r)*((n=1) + Median + Mean + std), data = census_group_18)
+table_gent_3_level_18 <- tabular(Format(digits = 0) * household_income_18 + Format(digits = 0) * income_pc_18 + Format(digits = 0) * value_18 + Format(digits = 0) * median_rent_18 + Format(digits = 0) * population_18 + Format(digits = 1) * share_white_only_18 + Format(digits = 1) * share_black_not_latino_18 + Format(digits = 1) * share_latino_18 ~ one_gentri_3 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_18)
 
 toLatex(table_gent_3_level_18)
 table_gent_3_level_18
-
 ```
 
 
@@ -544,52 +544,52 @@ table_gent_3_level_18
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_13 <- census_income %>%
-  select(household_income_13, 
-         income_pc_13, 
-         value_13,
-         median_rent_13,
-         share_white_only_13, 
-         share_black_not_latino_13,
-         share_latino_13,
-         population_13,
-         one_gentri_4
+  select(
+    household_income_13,
+    income_pc_13,
+    value_13,
+    median_rent_13,
+    share_white_only_13,
+    share_black_not_latino_13,
+    share_latino_13,
+    population_13,
+    one_gentri_4
   )
 
 census_group_13 <- census_group_13[census_group_13$one_gentri_4 != "versicolor", ]
 
 census_group_13$one_gentri_4 <- factor(census_group_13$one_gentri_4)
 
-table_gent_4_level_13 <- tabular(Format(digits=0)*household_income_13 + Format(digits=0)*income_pc_13 + Format(digits=0)*value_13 + Format(digits=0)*median_rent_13 + Format(digits=0) * population_13 + Format(digits=1)*share_white_only_13 + Format(digits=1)*share_black_not_latino_13 + Format(digits=1)*share_latino_13 ~ one_gentri_4 * Justify(c, r)*((n=1) + Median + Mean + std), data = census_group_13)
+table_gent_4_level_13 <- tabular(Format(digits = 0) * household_income_13 + Format(digits = 0) * income_pc_13 + Format(digits = 0) * value_13 + Format(digits = 0) * median_rent_13 + Format(digits = 0) * population_13 + Format(digits = 1) * share_white_only_13 + Format(digits = 1) * share_black_not_latino_13 + Format(digits = 1) * share_latino_13 ~ one_gentri_4 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_13)
 
 toLatex(table_gent_4_level_13)
 table_gent_4_level_13
-
 ```
 
 
 ```{r, warning=FALSE, error=FALSE}
 
 census_group_18 <- census_income %>%
-  select(household_income_18, 
-         income_pc_18, 
-         value_18,
-         median_rent_18,
-         share_white_only_18, 
-         share_black_not_latino_18,
-         share_latino_18,
-         population_18,
-         one_gentri_4
+  select(
+    household_income_18,
+    income_pc_18,
+    value_18,
+    median_rent_18,
+    share_white_only_18,
+    share_black_not_latino_18,
+    share_latino_18,
+    population_18,
+    one_gentri_4
   )
 
 census_group_18 <- census_group_18[census_group_18$one_gentri_4 != "versicolor", ]
 
 census_group_18$one_gentri_4 <- factor(census_group_18$one_gentri_4)
 
-table_gent_4_level_18 <- tabular(Format(digits=0)*household_income_18 + Format(digits=0)*income_pc_18 + Format(digits=0)*value_18 + Format(digits=0)*median_rent_18 + Format(digits=0) * population_18 + Format(digits=1)*share_white_only_18 + Format(digits=1)*share_black_not_latino_18 + Format(digits=1)*share_latino_18 ~ one_gentri_4 * Justify(c,r) * ((n=1) + Median + Mean + std), data = census_group_18)
+table_gent_4_level_18 <- tabular(Format(digits = 0) * household_income_18 + Format(digits = 0) * income_pc_18 + Format(digits = 0) * value_18 + Format(digits = 0) * median_rent_18 + Format(digits = 0) * population_18 + Format(digits = 1) * share_white_only_18 + Format(digits = 1) * share_black_not_latino_18 + Format(digits = 1) * share_latino_18 ~ one_gentri_4 * Justify(c, r) * ((n <- 1) + Median + Mean + std), data = census_group_18)
 
 toLatex(table_gent_4_level_18)
 table_gent_4_level_18
-
 ```
 
 
@@ -598,18 +598,19 @@ table_gent_4_level_18
 
 ```{r, warning=FALSE, error=FALSE}
 
-#census %>%
-  #summarise(median=median(household_income_13, na.rm=T))
+# census %>%
+# summarise(median=median(household_income_13, na.rm=T))
 
 census_group <- census_income %>%
-  select(increase_value, 
-         increase_rent, 
-         increase_income,
-         increase_income_pc,
-         increase_share_latino, 
-         increase_share_black_not_latino,
-         increase_pop,
-         one_gentri_1
+  select(
+    increase_value,
+    increase_rent,
+    increase_income,
+    increase_income_pc,
+    increase_share_latino,
+    increase_share_black_not_latino,
+    increase_pop,
+    one_gentri_1
   )
 
 census_group <- census_group[census_group$one_gentri_1 != "versicolor", ]
@@ -618,28 +619,28 @@ census_group$one_gentri_1 <- factor(census_group$one_gentri_1)
 
 pvalue <- function(x) t.test(x ~ census_group$one_gentri_1)$p.value
 
-table_gent_1 <- tabular(Format(digits=2) * increase_value + Format(digits=2) * increase_rent + Format(digits=2) * increase_income + Format(digits=2) * increase_income_pc + Format(digits=2) * increase_pop + Format(digits=2) * increase_share_latino + Format(digits=2) * increase_share_black_not_latino  ~ Format(digits=2) * one_gentri_1 * Justify(c,r) * (Median + Mean + std) + pvalue, data = census_group)
+table_gent_1 <- tabular(Format(digits = 2) * increase_value + Format(digits = 2) * increase_rent + Format(digits = 2) * increase_income + Format(digits = 2) * increase_income_pc + Format(digits = 2) * increase_pop + Format(digits = 2) * increase_share_latino + Format(digits = 2) * increase_share_black_not_latino ~ Format(digits = 2) * one_gentri_1 * Justify(c, r) * (Median + Mean + std) + pvalue, data = census_group)
 
 toLatex(table_gent_1)
 table_gent_1
-
 ```
 
 
 ```{r, warning=FALSE, error=FALSE}
 
-#census %>%
-  #summarise(median=median(household_income_13, na.rm=T))
+# census %>%
+# summarise(median=median(household_income_13, na.rm=T))
 
 census_group <- census_income %>%
-  select(increase_value, 
-         increase_rent, 
-         increase_income,
-         increase_income_pc,
-         increase_share_latino, 
-         increase_share_black_not_latino,
-         increase_pop,
-         one_gentri_2
+  select(
+    increase_value,
+    increase_rent,
+    increase_income,
+    increase_income_pc,
+    increase_share_latino,
+    increase_share_black_not_latino,
+    increase_pop,
+    one_gentri_2
   )
 
 census_group <- census_group[census_group$one_gentri_2 != "versicolor", ]
@@ -648,11 +649,10 @@ census_group$one_gentri_2 <- factor(census_group$one_gentri_2)
 
 pvalue <- function(x) t.test(x ~ census_group$one_gentri_2)$p.value
 
-table_gent_2 <- tabular(Format(digits=1) * increase_value + Format(digits=1) * increase_rent + Format(digits=1) * increase_income + Format(digits=1) * increase_income_pc + Format(digits=1) * increase_pop + Format(digits=1) * increase_share_latino + Format(digits=1) * increase_share_black_not_latino ~ Format(digits=1) * one_gentri_2 * (Median + Mean + std) + pvalue, data = census_group)
+table_gent_2 <- tabular(Format(digits = 1) * increase_value + Format(digits = 1) * increase_rent + Format(digits = 1) * increase_income + Format(digits = 1) * increase_income_pc + Format(digits = 1) * increase_pop + Format(digits = 1) * increase_share_latino + Format(digits = 1) * increase_share_black_not_latino ~ Format(digits = 1) * one_gentri_2 * (Median + Mean + std) + pvalue, data = census_group)
 
 toLatex(table_gent_2)
 table_gent_2
-
 ```
 
 
@@ -660,14 +660,15 @@ Gentrification definition numer 2 (75th percentile):
 
 ```{r, warning=FALSE, error=FALSE}
 census_group <- census_income %>%
-  select(increase_value, 
-         increase_rent, 
-         increase_income,
-         increase_income_pc,
-         increase_share_latino, 
-         increase_share_black_not_latino,
-         increase_pop,
-         one_gentri_3
+  select(
+    increase_value,
+    increase_rent,
+    increase_income,
+    increase_income_pc,
+    increase_share_latino,
+    increase_share_black_not_latino,
+    increase_pop,
+    one_gentri_3
   )
 
 census_group <- census_group[census_group$one_gentri_3 != "versicolor", ]
@@ -676,26 +677,26 @@ census_group$one_gentri_3 <- factor(census_group$one_gentri_3)
 
 pvalue <- function(x) t.test(x ~ census_group$one_gentri_3)$p.value
 
-table_gent_3 <- tabular(Format(digits=1) * increase_value + Format(digits=1) * increase_rent + Format(digits=1) * increase_income + Format(digits=1) * increase_income_pc + Format(digits=1) * increase_pop + Format(digits=1) * increase_share_latino + Format(digits=1) * increase_share_black_not_latino ~ one_gentri_3 *Justify(c,r) * (Median + Mean + std) + pvalue, data = census_group)
+table_gent_3 <- tabular(Format(digits = 1) * increase_value + Format(digits = 1) * increase_rent + Format(digits = 1) * increase_income + Format(digits = 1) * increase_income_pc + Format(digits = 1) * increase_pop + Format(digits = 1) * increase_share_latino + Format(digits = 1) * increase_share_black_not_latino ~ one_gentri_3 * Justify(c, r) * (Median + Mean + std) + pvalue, data = census_group)
 
 toLatex(table_gent_3)
 
 table_gent_3
-
 ```
 
 Gentrification definition numer 2 (white 90th percentile):
 
 ```{r, warning=FALSE, error=FALSE}
 census_group <- census_income %>%
-  select(increase_value, 
-         increase_rent, 
-         increase_income,
-         increase_income_pc,
-         increase_share_latino, 
-         increase_share_black_not_latino,
-         increase_pop,
-         one_gentri_4
+  select(
+    increase_value,
+    increase_rent,
+    increase_income,
+    increase_income_pc,
+    increase_share_latino,
+    increase_share_black_not_latino,
+    increase_pop,
+    one_gentri_4
   )
 
 census_group <- census_group[census_group$one_gentri_4 != "versicolor", ]
@@ -704,17 +705,18 @@ census_group$one_gentri_4 <- factor(census_group$one_gentri_4)
 
 pvalue <- function(x) t.test(x ~ census_group$one_gentri_4)$p.value
 
-table_gent_4 <- tabular(Format(digits=1) * increase_value + Format(digits=1) * increase_rent + Format(digits=1) * increase_income + Format(digits=1) * increase_income_pc + Format(digits=1) * increase_pop + Format(digits=1) * increase_share_latino + Format(digits=1) * increase_share_black_not_latino ~ Format(digits=1) * one_gentri_4 * Justify(c,r) * (Median + Mean + std) + pvalue, data = census_group)
+table_gent_4 <- tabular(Format(digits = 1) * increase_value + Format(digits = 1) * increase_rent + Format(digits = 1) * increase_income + Format(digits = 1) * increase_income_pc + Format(digits = 1) * increase_pop + Format(digits = 1) * increase_share_latino + Format(digits = 1) * increase_share_black_not_latino ~ Format(digits = 1) * one_gentri_4 * Justify(c, r) * (Median + Mean + std) + pvalue, data = census_group)
 
 toLatex(table_gent_4)
 
 table_gent_4
-
 ```
 
 
+There is a positive correlation between the continuous definition of gentrification 1 and 2. 
+
 ```{r, warning=FALSE, error=FALSE}
-ggplot(data = census) + 
+ggplot(data = census) +
   geom_point(mapping = aes(x = gentri_3, y = gentri_4)) +
   geom_smooth(mapping = aes(x = gentri_3, y = gentri_4))
 ```
