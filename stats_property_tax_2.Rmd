@@ -199,10 +199,21 @@ census <- census %>%
 
 ggplot(census) +
   geom_histogram(aes(x = gentri_3, y = ..density..),
-    colour = "black", fill = "white"
+    colour = "blue", fill = "white",
+    bins = 80
   ) +
-  geom_vline(xintercept = 0.02742509, color = "blue") +
-  ggtitle("Histogram price increase in home values")
+  geom_vline(xintercept = quantile(gentrification, c(.75), na.rm = T), color = "blue", linetype="dashed") +
+  geom_vline(xintercept = quantile(gentrification, c(.90), na.rm = T), color = "red", linetype="dashed") +
+  geom_text(aes(0.075, 10,
+    label = "75th",
+    hjust = 0.1
+  )) +
+  geom_text(aes(0.125, 10,
+    label = "90th",
+    hjust = 0.1
+  ) ) +
+  ggtitle("Histogram Gentrification #1 (Education)") + 
+  xlab("Gentrification definition 1")
 ``` 
 
 What is the th percentile of the gentrification's indicator:
