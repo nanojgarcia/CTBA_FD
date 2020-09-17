@@ -588,3 +588,25 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   )
 ```
 
+```{r Tracts Under Gentrification Definition 2}
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = ifelse(gent$one_gentri_4==1,"red",
+                       ifelse(gent$one_gentri_3==1,"blue","gray")),
+    fillOpacity = .6,
+    weight = 1
+  )
+```
+
