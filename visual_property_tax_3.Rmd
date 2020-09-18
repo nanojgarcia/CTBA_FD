@@ -472,11 +472,12 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     fillOpacity = .1,
     weight = 3,
     group = "Community Areas"
-  ) #%>% 
+  ) %>% 
   addLabelOnlyMarkers(
     lng = community$lon, lat = community$lat,
-    label = to_title_case(community$community),
-    labelOptions = labelOptions(noHide = T, textOnly = T, textsize = "10px",
+    label = to_title_case(substr(community$community, 1, 6)),
+    labelOptions = labelOptions(noHide = T, textOnly = T, textsize = "6px",
+                                direction = "center",
                                 style = list(
                                   "color" = "red"
                                 )))
