@@ -312,7 +312,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     weight = 2.5,
     fillOpacity = .3,
     smoothFactor = .2,
-    popup = tract_labels,
+    popup = gent$tract_labels,
     popupOptions = tract_l_options,
     highlightOptions = tract_h_lights,
     group = "Gentrification By Education"
@@ -583,7 +583,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     data = st_geometry(gent),
     color = "black",
     fillColor = ifelse(gent$one_gentri_2==1,"red",
-                       ifelse(gent$one_gentri_1==1,"blue","gray")),
+                       ifelse(gent$one_gentri_1==1,"blue","white")),
     fillOpacity = .6,
     weight = 1
   )
@@ -605,9 +605,29 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     data = st_geometry(gent),
     color = "black",
     fillColor = ifelse(gent$one_gentri_4==1,"red",
-                       ifelse(gent$one_gentri_3==1,"blue","gray")),
+                       ifelse(gent$one_gentri_3==1,"blue","white")),
     fillOpacity = .6,
     weight = 1
   )
 ```
 
+```{r Tracts Under Both Gentrification Definitions at 75th percentile}
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(gent),
+    color = "black",
+    fillColor = ifelse(gent$one_gentri_1*gent$one_gentri_3==1,"red","white"),
+    fillOpacity = .6,
+    weight = 1
+  )
+```
