@@ -394,6 +394,9 @@ saveRDS(census, file = "census.RDS")
 
 ```{r, warning=FALSE, error=FALSE}
 
+census_income <- census %>%
+  filter(household_income_13 < 58676.28)
+
 census_group_13 <- census_income %>%
   select(
     household_income_13,
@@ -418,10 +421,6 @@ table_gent_1_level_13
 ```
 
 ```{r, warning=FALSE, error=FALSE}
-
-census_income <- census %>%
-  filter(household_income_13 < 58676.28)
-
 census_group_18 <- census_income %>%
   select(
     household_income_18,

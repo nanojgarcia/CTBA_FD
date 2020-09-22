@@ -32,6 +32,7 @@ rm(list = ls())
 ```{r, warning=FALSE, error=FALSE}
 
 gent <- readRDS("gent.RDS")
+
 ```
 
 Neighborhood Polygons:
@@ -573,7 +574,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(community),
     color = "black",
-    fillColor = "gray",
+    fillColor = "black",
     popup = neigh_labels,
     fillOpacity = .1,
     weight = 5,
@@ -586,7 +587,13 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
                        ifelse(gent$one_gentri_1==1,"blue","white")),
     fillOpacity = .6,
     weight = 1
-  )
+  ) %>% 
+  addLegend(
+    title = "Gentrification defitintion 1",
+    colors =c("blue",  "red"),
+    labels= c("75th percentile", "75th and 90th percentile"),
+    position = "topright"
+  ) 
 ```
 
 ```{r Tracts Under Gentrification Definition 2}
@@ -608,7 +615,13 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
                        ifelse(gent$one_gentri_3==1,"blue","white")),
     fillOpacity = .6,
     weight = 1
-  )
+  ) %>% 
+  addLegend(
+    title = "Gentrification defitintion 2",
+    colors =c("blue",  "red"),
+    labels= c("75th percentile", "75th and 90th percentile"),
+    position = "topright"
+  ) 
 ```
 
 ```{r Tracts Under Both Gentrification Definitions at 75th percentile}
@@ -617,7 +630,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(community),
     color = "black",
-    fillColor = "gray",
+    fillColor = "black",
     popup = neigh_labels,
     fillOpacity = .1,
     weight = 5,
@@ -630,4 +643,130 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     fillOpacity = .6,
     weight = 1
   )
+```
+
+
+```{r Increase Median Income by defintion 1 }
+median_increase_income <- colorNumeric(
+  palette = "viridis",
+  domain = census_income$increase_income)
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(census_income),
+    color = "black",
+    fillColor = ifelse(gent$increase_income*gent$one_gentri_1!=0, median_increase_income(gent$increase_income), "white"),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Increase in Household Income",
+    pal = median_increase_income,
+    values = census_income$increase_income,
+    position = "topright"
+  ) 
+```
+
+```{r Increase Median Household by defintion 1 }
+median_increase_value <- colorNumeric(
+  palette = "viridis",
+  domain = ifelse(census_income$one_gentri_1==1, census_income$increase_value,0))
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(census_income),
+    color = "black",
+    fillColor = ifelse(gent$increase_value*gent$one_gentri_1!=0, median_increase_value(gent$increase_value), "white"),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Increase in Home Value",
+    pal = median_increase_value,
+    values = ifelse(census_income$one_gentri_1==1, census_income$increase_value,0),
+    position = "topright"
+  ) 
+```
+
+```{r Increase Median Income by defintion 2 }
+median_increase_income <- colorNumeric(
+  palette = "viridis",
+  domain = census_income$increase_income)
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(census_income),
+    color = "black",
+    fillColor = ifelse(gent$increase_income*gent$one_gentri_3!=0, median_increase_income(gent$increase_income), "white"),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Increase in Household Income",
+    pal = median_increase_income,
+    values = census_income$increase_income,
+    position = "topright"
+  ) 
+```
+
+```{r Increase Median Household by defintion 2 }
+median_increase_value <- colorNumeric(
+  palette = "viridis",
+  domain = ifelse(census_income$one_gentri_3==1, census_income$increase_value,0)
+)
+
+leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    data = st_geometry(community),
+    color = "black",
+    fillColor = "gray",
+    popup = neigh_labels,
+    fillOpacity = .1,
+    weight = 5,
+    group = "Community Areas"
+  ) %>% 
+  addPolygons(
+    data = st_geometry(census_income),
+    color = "black",
+    fillColor = ifelse(gent$increase_value*gent$one_gentri_3!=0, median_increase_value(gent$increase_value), "white"),
+    fillOpacity = .6,
+    weight = 1
+  ) %>% 
+  addLegend(
+    title = "Increase in Home Value",
+    pal = median_increase_value,
+    values = ifelse(census_income$one_gentri_3==1, census_income$increase_value,0),
+    position = "topright"
+  ) 
 ```
