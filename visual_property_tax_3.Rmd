@@ -711,7 +711,6 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     position = "topright"
   ) 
 
-ggplot(census_income) + geom_point(aes(x=increase_income, y=increase_value)) + geom_smooth(aes(x=increase_income, y=increase_value), method = "lm")
 ```
 
 PLEASE NOTE: This following section must be run sequentially after the previous section. Running chunks out of order will result in wrong maps.
@@ -779,5 +778,4 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
     position = "topright"
   ) 
 
-ggplot(census_income) + geom_point(aes(x=increase_income, y=increase_value)) + geom_smooth(aes(x=increase_income, y=increase_value), method = "lm")
 ```
