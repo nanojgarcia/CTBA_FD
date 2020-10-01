@@ -648,7 +648,9 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
 ```
 
 
-```{r Increase Median Income by defintion 1 }
+```{r Increase Median Income by defintion 1 - Slide 22}
+census_income <- gent %>% filter(one_gentri_1!=0)
+
 median_increase_income <- colorNumeric(
   palette = "viridis",
   domain = census_income$increase_income)
@@ -667,22 +669,22 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(census_income),
     color = "black",
-    fillColor = ifelse(gent$increase_income*gent$one_gentri_1!=0, median_increase_income(gent$increase_income), "white"),
+    fillColor = median_increase_income(census_income$increase_income),
     fillOpacity = .6,
     weight = 1
   ) %>% 
   addLegend(
-    title = "Increase in Household Income",
+    title = "Increase in Median Household Income",
     pal = median_increase_income,
     values = census_income$increase_income,
     position = "topright"
   ) 
 ```
 
-```{r Increase Median Household by defintion 1 }
+```{r Increase Median House Value by defintion 1 - Slide 23}
 median_increase_value <- colorNumeric(
   palette = "viridis",
-  domain = ifelse(census_income$one_gentri_1==1, census_income$increase_value,0))
+  domain = census_income$increase_value)
 
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
@@ -698,19 +700,25 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(census_income),
     color = "black",
-    fillColor = ifelse(gent$increase_value*gent$one_gentri_1!=0, median_increase_value(gent$increase_value), "white"),
+    fillColor = median_increase_value(census_income$increase_value),
     fillOpacity = .6,
     weight = 1
   ) %>% 
   addLegend(
     title = "Increase in Home Value",
     pal = median_increase_value,
-    values = ifelse(census_income$one_gentri_1==1, census_income$increase_value,0),
+    values = census_income$increase_value,
     position = "topright"
   ) 
+
+ggplot(census_income) + geom_point(aes(x=increase_income, y=increase_value)) + geom_smooth(aes(x=increase_income, y=increase_value), method = "lm")
 ```
 
-```{r Increase Median Income by defintion 2 }
+PLEASE NOTE: This following section must be run sequentially after the previous section. Running chunks out of order will result in wrong maps.
+
+```{r Increase Median Income by defintion 2 Slide 25}
+census_income <- gent %>% filter(one_gentri_3!=0)
+
 median_increase_income <- colorNumeric(
   palette = "viridis",
   domain = census_income$increase_income)
@@ -729,7 +737,7 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(census_income),
     color = "black",
-    fillColor = ifelse(gent$increase_income*gent$one_gentri_3!=0, median_increase_income(gent$increase_income), "white"),
+    fillColor = median_increase_income(census_income$increase_income),
     fillOpacity = .6,
     weight = 1
   ) %>% 
@@ -741,11 +749,10 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   ) 
 ```
 
-```{r Increase Median Household by defintion 2 }
+```{r Increase Median House Value by defintion 2 Slide 26}
 median_increase_value <- colorNumeric(
   palette = "viridis",
-  domain = ifelse(census_income$one_gentri_3==1, census_income$increase_value,0)
-)
+  domain = census_income$increase_value)
 
 leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
@@ -761,14 +768,16 @@ leaflet(options = leafletOptions(zoomSnap = 0.1)) %>%
   addPolygons(
     data = st_geometry(census_income),
     color = "black",
-    fillColor = ifelse(gent$increase_value*gent$one_gentri_3!=0, median_increase_value(gent$increase_value), "white"),
+    fillColor = median_increase_value(census_income$increase_value),
     fillOpacity = .6,
     weight = 1
   ) %>% 
   addLegend(
     title = "Increase in Home Value",
     pal = median_increase_value,
-    values = ifelse(census_income$one_gentri_3==1, census_income$increase_value,0),
+    values = census_income$increase_value,
     position = "topright"
   ) 
+
+ggplot(census_income) + geom_point(aes(x=increase_income, y=increase_value)) + geom_smooth(aes(x=increase_income, y=increase_value), method = "lm")
 ```
